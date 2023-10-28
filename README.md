@@ -1,15 +1,10 @@
-# OpenGlück
+# OpenGlück Server
 
-The OpenGlück project is a collection of free software that can be used to help
-build a riche ecosystem of apps and tools for diabetes users.
+This is an HTTPS server that is the main entry point of OpenGlück.
 
 While it does not connect to third-party services by itself, you can use
 adapters that act as plugins which you can use to record new data or query the
 OpenGlück database.
-
-## opengluck-server
-
-This is an HTTPS server that is the main entry point of OpenGlück.
 
 OpenGlück can be configured to call webhooks when specific events are recorded
 (such as a new blood glucose reading). This is a powerful feature -- you can,
@@ -18,7 +13,7 @@ having a low at night.
 
 ## Prerequisites
 
-- a server, that you can use to run the software (something small is more than enough, if looking
+- a server computer or virtual machine, that you can use to run the software (something small is more than enough, if looking
   for a cloud instance you can use a t2.small with 16 GB of storage on AWS for around a dozen bucks per month)
 - some basic knowledge about how to configure an HTTPS proxy (we recommend
   using [CaddyServer](https://caddyserver.com) for a zero-touch configuration
@@ -61,6 +56,56 @@ docker run -d --env-file .env \
   --add-host host.docker.internal:host-gateway \
   opengluck/opengluck-server
 ```
+
+This will listen on HTTP traffic on port `8080`. This port needs not be open on remote interfaces, see step below.
+
+### 4. Forward HTTPS requests to `opengluck-server`
+
+Use the software of your chosing to forward HTTPS requests to your SSL domain name to OpenGlück.
+
+I am told you can use Caddy like so (replace `example.com` with your domain name):
+
+```
+docker run caddy:latest caddy reverse-proxy --from example.com --to localhost:8080
+```
+
+## Usage
+
+The OpenGlück server is a “dumb” piece of software, that does not attempt to collect glucose data by itself, or to perform actions when certain conditions occur.
+
+You are free to enable the plug-ins you want, or write your own if you'd like to.
+
+The basic idea is:
+
+1. To inject data to OpenGlück, you use one of the APIs to upload records.
+2. To trigger a plug-in when “something” occurs, you need to add a webhook. This is a URL that your plug-ins listen to, typically on `localhost`. When the specific action accurs, OpenGlück calls your plug-in with a JSON payload so you have more context. If required, you can always use APIs to retrieve more data from OpenGlück.
+
+## Concepts
+
+### Records
+
+Records are either:
+
+- glucose readings
+- insulin (bolus)
+- low (also known as “snacks”)
+
+#### Glucose Readings
+
+Glucose readings can be of two type:
+
+- `historic`: these are the records that have been processed by whichever smoothing algorithm your reader is using. These values are not expected to change.
+- `scan`: these are the “fresh” records, which might be adjusted in a near future to smooth readings.
+
+#### Insulin
+
+Insulin records are always boluses.
+
+#### Low/Snack
+
+A low record is typically used to indicate that you have eaten a snack in response to a low, and indicate how much sugar you ate.
+
+This can be use by clients to visually show your lows and provide visual cues that blood glucose is eventually expected to rise.
 
 ## Environment
 
