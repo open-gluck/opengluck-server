@@ -1,0 +1,5 @@
+#!/bin/bash
+
+set -e
+
+exec supervisord -c /app/config/supervisord.conf -n -j /tmp/supervisord.pid -l /dev/stdout -y 0

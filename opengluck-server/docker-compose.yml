@@ -1,0 +1,55 @@
+version: "3.8"
+
+volumes:
+  data:
+  app_dev_node_modules:
+
+x-opengluck-server: &opengluck-server
+  build:
+    context: .
+  restart: "no"
+  extra_hosts:
+    - "host.docker.internal:host-gateway"
+
+services:
+  opengluck-server:
+    # this is the production service, that runs everything using supervisord
+    # (redis, the Python server, the Next.js app)
+    <<: *opengluck-server
+    image: opengluck/opengluck-server
+    volumes:
+      - data:/app/data
+    environment:
+      - TZ=${TZ:-UTC}
+      - MERGE_RECORD_LOW_THRESHOLD=${MERGE_RECORD_LOW_THRESHOLD:-}
+      - MERGE_RECORD_HIGH_THRESHOLD=${MERGE_RECORD_HIGH_THRESHOLD:-}
+    ports:
+      - ${HTTP_PORT:-8080}:8080
+
+  dev-tools:
+    # this is only used if you're actively developping OpenGlück
+    # (this image runs the linters and other tools for developers)
+    build: dev-tools
+    environment:
+      - TARGET=dev
+    volumes:
+      - .:/app
+      - data:/app/data
+
+  dev:
+    # this is the dev version of opengluck-server, runs everything locally,
+    # with hot-reload
+    <<: *opengluck-server
+    build:
+      target: app-dev
+    volumes:
+      - data:/app/data
+      - .:/app
+      - app_dev_node_modules:/app/app/node_modules
+    environment:
+      - TZ=${TZ:-UTC}
+      - MERGE_RECORD_LOW_THRESHOLD=${MERGE_RECORD_LOW_THRESHOLD:-}
+      - MERGE_RECORD_HIGH_THRESHOLD=${MERGE_RECORD_HIGH_THRESHOLD:-}
+      - TARGET=dev
+    ports:
+      - ${HTTP_PORT:-8080}:8080

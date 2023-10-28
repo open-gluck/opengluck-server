@@ -1,0 +1,6 @@
+#!/bin/bash
+
+set -e
+. dev-tools/scripts/setup-python.sh
+
+black --check --diff --color .

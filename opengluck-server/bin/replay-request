@@ -1,0 +1,17 @@
+#!/bin/bash
+
+# This script can be used to replay a request on the OpenGlück server. You can
+# use it to debug and see how it reacts to various queries.
+#
+# Usage:
+# $ bin/replay-request sample/send-payload.txt
+
+set -e
+
+file=${1:-/dev/stdin}
+
+port=$(grep ^HTTP_PORT= .env | cut -d= -f2)
+port=${port:-8080}
+
+# cat "$file" | nc -q 1 localhost:$port -ign_eof
+cat "$file" | nc -q 1 localhost $port

@@ -1,0 +1,18 @@
+[tool.isort]
+profile = "black"
+skip_gitignore = true
+include_trailing_comma = true
+line_length = 79
+multi_line_output = 3
+
+[tool.pyright]
+include = ["opengluck"]
+venv = "venv"
+venvPath = "."
+pythonVersion = "3.8.5"
+reportMissingTypeStubs = true
+reportMissingImports = true
+
+[tool.pydocstyle]
+match_dir = '(?!venv|test.*|scripts)[^\.].*'
+ignore = "D100, D104, D203, D204, D213, D215, D400, D401, D404, D406, D407, D408, D409, D413" # Google + D100 + D104
