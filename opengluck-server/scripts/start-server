@@ -1,0 +1,11 @@
+#!/bin/bash
+
+set -e
+source /opt/venv/bin/activate
+
+opts=()
+if [ "$TARGET" == dev ]; then
+  opts+=(--reload)
+fi
+
+gunicorn -w 5 opengluck.server:app --bind :8081 --error-logfile - --log-file - "${opts[@]}"

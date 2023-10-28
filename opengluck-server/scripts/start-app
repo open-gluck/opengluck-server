@@ -1,0 +1,16 @@
+#!/bin/bash
+
+set -e
+cd /app/app
+mkdir -p /app/data/app
+
+export NEXTAUTH_SECRET=42
+
+opts=()
+
+if [ "$TARGET" == dev ]; then
+  npm ci
+  npm run dev
+else
+  node server
+fi

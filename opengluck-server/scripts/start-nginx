@@ -1,0 +1,11 @@
+#!/bin/bash
+
+set -e
+
+DIR="/app/data/$NGINX_SERVERNAME"
+echo Starting nginx on $NGINX_SERVERNAME
+
+mkdir -p /app/data/nginx
+mkdir -p /app/data/nginx/public/
+
+exec nginx -c /app/config/nginx/nginx.conf

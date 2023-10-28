@@ -1,0 +1,8 @@
+#!/bin/bash
+
+# This is the release script. Run it to build and push a new version of the
+# Docker image to DockerHub.
+
+set -e
+make build
+docker --config ~/.docker-opengluck push docker.io/opengluck/opengluck-server

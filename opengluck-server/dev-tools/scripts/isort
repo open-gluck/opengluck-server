@@ -1,0 +1,11 @@
+#!/bin/bash
+
+set -e
+. dev-tools/scripts/setup-python.sh
+
+tmp=$(mktemp -d)
+(cd $tmp; git init >/dev/null 2>&1)
+
+GIT_DIR=$tmp/.git isort . --check --diff || ret=$?
+rm -rf $tmp
+exit $ret
