@@ -82,12 +82,68 @@ The basic idea is:
 
 ## Concepts
 
+### User Data
+
+_User Data_ provides a system for values to be read and written given a key. This can be useful to have plugins share state or communicate.
+
+OpenGlück supports two types of user data:
+
+- key/values, that can get read/set
+- lists, to which you can push an item to the front
+
+You can also trigger webhooks when a user data is being set, which provides for a nice way to build cascading effects (beware of _cycles_ though, as OpenGlück will gladly trigger recursive webhooks to no end).
+
+### Webhooks
+
+See [https://github.com/open-gluck/opengluck-server/blob/main/opengluck-server/app/src/features/webhooks.ts](webhook.ts) for the list of webhooks.
+
+Optionally, you can provide a [JMESpath](https://jmespath.org) query to restrict one of your webhook to only when the query matches. This is useful if you're interested in a webhook, but only specific events and not all the times the webhook is triggered.
+
+You can always browse your running OpenGlück server to browse the webhooks, and see the latest payloads associated with each webhooks. This might help you if you're trying to expand on the OpenGlück functionnality to see what's being passed and when.
+
+#### `app_request`
+
+This is a list of the requests sent to the server. Think of it as something like an HTTP log.
+
+#### `userdata:set`
+
+When a user data has been set.
+
+#### `glucose:changed`
+
+When a blood glucose measurement has changed.
+
+#### `episode:changed`
+
+When the current episode has changed.
+
+#### `glucose:new:historic`
+
+When a new historic blood glucose has been recorded.
+
+#### `glucose:new:scan`
+
+When a new scan blood glucose has been recorded.
+
+#### `low:new`
+
+When a new low has been recorded.
+
+#### `insulin:new`
+
+When a new insulin has been recorded.
+
+#### `food:new`
+
+When a new food has been recorded.
+
 ### Records
 
 Records are either:
 
 - glucose readings
 - insulin (bolus)
+- food (for regular meals)
 - low (also known as “snacks”)
 
 #### Glucose Readings
@@ -100,6 +156,10 @@ Glucose readings can be of two type:
 #### Insulin
 
 Insulin records are always boluses.
+
+#### Food
+
+A food record tracks when you have a meal, typically your breakfast, lunch and dinner.
 
 #### Low/Snack
 
