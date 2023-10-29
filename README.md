@@ -107,6 +107,19 @@ A low record is typically used to indicate that you have eaten a snack in respon
 
 This can be use by clients to visually show your lows and provide visual cues that blood glucose is eventually expected to rise.
 
+### Episodes
+
+An *episode* is used to convey a state, without providing a blood glucose measurement.
+
+Episodes can be one of:
+
+- `unknown`: when no value is known (can be used when you don't have a sensor)
+- `disconnected`: when the sensor is disconnected (e.g. out of reach of Bluetooth)
+- `error`: when an error occured
+- `low`: when blood glucose is *low*
+- `normal`: when blood glucose is in range
+- `high`: when blood glucose is *high*
+
 ## Environment
 
 In addition to the environment variables accepted by Next, Here is a list of
