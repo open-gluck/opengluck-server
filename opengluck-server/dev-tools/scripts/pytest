@@ -1,0 +1,40 @@
+#!/bin/bash
+
+set -e
+. dev-tools/scripts/setup-python.sh
+
+export TZ=Europe/Paris # always test using Paris timezone
+
+mkdir -p /app/data/.pytest
+
+# Start a Redis server, for the tests
+export REDIS_PORT=6399
+REDIS_PID_FILE=/tmp/redis-pytest.pid
+REDIS_CONF=/tmp/redis-pytest.conf
+
+cat <<EOF >$REDIS_CONF
+port $REDIS_PORT
+pidfile $REDIS_PID_FILE
+appendonly no
+save ""
+loglevel warning
+EOF
+
+function stop_redis_server() {
+  REDIS_PID=$(cat $REDIS_PID_FILE)
+  echo Stopping redis on PID $REDIS_PID
+  kill $REDIS_PID 2>/dev/null || true
+  sleep 1
+  kill -9 $REDIS_PID 2>/dev/null || true
+}
+
+/usr/local/bin/redis-server $REDIS_CONF &
+# wait until redis is ready
+until redis-cli -p $REDIS_PORT ping >/dev/null 2>&1; do sleep 0.1; done
+
+ret=0
+pytest --log-cli-level=DEBUG -vv -o cache_dir=/app/data/.pytest /app/opengluck || ret=$?
+
+stop_redis_server
+
+exit $ret

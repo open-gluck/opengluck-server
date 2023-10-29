@@ -1,0 +1,6 @@
+#!/bin/bash
+
+set -e
+
+rm -rf /app/data/*
+(cd /app/app/node_modules; ls -A1 | xargs rm -rf)
