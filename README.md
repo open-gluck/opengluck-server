@@ -180,6 +180,12 @@ Episodes can be one of:
 - `normal`: when blood glucose is in range
 - `high`: when blood glucose is *high*
 
+### Instant Glucose Record
+
+An *instant glucose record* is a live measurement from the sensor, before smoothing is applied. It is not used by APIs retrieving current or last data, but can be queried specifically if you need. 
+
+Users need to take special care with instant glucose records, as usual, as it can sometimes show values out of range.
+
 ## Environment
 
 In addition to the environment variables accepted by Next, Here is a list of
