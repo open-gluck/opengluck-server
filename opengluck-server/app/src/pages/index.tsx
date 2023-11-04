@@ -54,6 +54,11 @@ export default function Home() {
         <a href="https://ifttt.com/">IFTTT</a>, etc) to OpenGlück. .
         <h2>Admin</h2>
         <h3>
+          <Link href="/api-access">API Access</Link>
+        </h3>
+        View your token, and the instructions required to configure apps to
+        connect to this server.
+        <h3>
           <Link href="/users">Users Administration</Link>
         </h3>
         Add or remove users.
