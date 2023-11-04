@@ -72,3 +72,8 @@ td {
     border: #aaa;
   }
 }
+
+dt {
+  font-weight: bold;
+  margin-top: 1rem;
+}
