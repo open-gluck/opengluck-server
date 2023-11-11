@@ -45,8 +45,6 @@ def _get_next_available_db() -> int:
         dbuser = _redis_client_zero.hget(_userdb_key, f"{db}")
         if dbuser is None:
             return db
-        # yield to other threads
-        time.sleep(0.0001)
         db += 1
 
 
