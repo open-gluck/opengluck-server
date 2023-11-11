@@ -1,24 +1,14 @@
 import json
-import logging
-import time
 from datetime import datetime
 from enum import Enum
 from typing import List
 
 from flask import Response, request
 
-from .food import FoodRecord, get_latest_food_records
 from .glucose import GlucoseRecord, GlucoseRecordType, find_glucose_records
-from .insulin import (
-    InsulinRecord,
-    find_insulin_records,
-    get_latest_insulin_records,
-)
+from .insulin import InsulinRecord, find_insulin_records
 from .login import assert_current_request_logged_in
-from .low import LowRecord, get_latest_low_records
-from .redis import get_revision
 from .server import app
-from .utils import parse_timestamp
 
 
 class _ExportType(str, Enum):
@@ -60,7 +50,7 @@ def _export_swift(
         units = insulin_record["units"]
         result += f"""
         InsulinRecord(timestamp: iso2date("{timestamp}"), units: {units}),"""
-    result += f"""
+    result += """
     ]),
     glucoseData: GlucoseData(records: ["""
     for glucose_record in glucose_records:

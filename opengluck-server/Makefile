@@ -21,7 +21,7 @@ dev-tools:
 test: dev-tools
 	@dev-tools/bin/exec dev-tools/scripts/pytest
 
-lint: flake8 isort black pydocstyle pyright
+lint: flake8 isort black pydocstyle pyright prettier
 
 flake8: dev-tools
 	@dev-tools/bin/exec dev-tools/scripts/flake8
@@ -40,6 +40,11 @@ pydocstyle: dev-tools
 
 redis-cli:
 	@[ -n "$$(docker-compose ps dev --filter status=running -q)" ] && docker-compose exec dev /usr/local/bin/redis-cli || docker-compose exec opengluck-server /usr/local/bin/redis-cli
+
+prettier: prettier-root
+
+prettier-root:
+	npx prettier@3.0.3 -c .
 
 release:
 	scripts/release

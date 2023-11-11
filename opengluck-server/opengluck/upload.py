@@ -7,25 +7,17 @@ import logging
 from datetime import datetime
 from multiprocessing import Lock
 
-from flask import Response, request
+from flask import Response, abort, request
 
-from .episode import (
-    get_current_episode_record,
-    get_episode_for_mgdl,
-    get_episodes_after_date,
-    insert_episode,
-    insert_episodes,
-    just_updated_episode,
-)
+from .episode import (get_current_episode_record, get_episode_for_mgdl,
+                      get_episodes_after_date, insert_episode, insert_episodes,
+                      just_updated_episode)
 from .food import insert_food_records
-from .glucose import (
-    get_current_glucose_record,
-    insert_glucose_records,
-    just_updated_glucose,
-    set_current_cgm_device_properties,
-)
+from .glucose import (get_current_glucose_record, insert_glucose_records,
+                      just_updated_glucose, set_current_cgm_device_properties)
 from .insulin import insert_insulin_records
-from .login import assert_current_request_logged_in
+from .login import (assert_current_request_logged_in,
+                    assert_get_current_request_redis_client)
 from .low import insert_low_records
 from .redis import get_revision
 from .server import app
@@ -35,9 +27,12 @@ _lock = Lock()
 
 @app.route("/opengluck/upload", methods=["POST"])
 def _upload_data_data():
+    redis_client = assert_get_current_request_redis_client()
     with _lock:
         assert_current_request_logged_in()
         body = request.get_json()
+        if not body:
+            abort(400)
         logging.debug(f"(upload) start with body: {body}")
 
         current_cgm_device_properties = body.get("current-cgm-device-properties", None)
@@ -175,5 +170,5 @@ def _upload_data_data():
                     )
 
         logging.debug("(upload) done")
-        response["revision"] = get_revision()
+        response["revision"] = get_revision(redis_client)
         return Response(json.dumps(response), mimetype="application/json")

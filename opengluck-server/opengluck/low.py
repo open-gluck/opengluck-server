@@ -7,8 +7,8 @@ from typing import List, TypedDict
 from flask import Response
 
 from .config import tz
-from .login import assert_current_request_logged_in
-from .redis import bump_revision, redis_client
+from .login import assert_get_current_request_redis_client
+from .redis import bump_revision
 from .server import app
 from .utils import parse_timestamp
 from .webhooks import call_webhooks
@@ -29,9 +29,9 @@ class LowRecord(TypedDict):
 @app.route("/opengluck/low", methods=["DELETE"])
 def _clear_all_low_records():
     """Delete all low records."""
-    assert_current_request_logged_in()
+    redis_client = assert_get_current_request_redis_client()
     redis_client.delete(_key_set)
-    bump_revision()
+    bump_revision(redis_client)
     return Response(status=204)
 
 
@@ -39,6 +39,7 @@ def record_low(
     *, id: str, timestamp: datetime, sugar_in_grams: float, deleted: bool
 ) -> None:
     """Record a low."""
+    redis_client = assert_get_current_request_redis_client()
     logging.info(
         f"Recording low, id={id}, timestamp={timestamp}, "
         + f"sugar_in_grams={sugar_in_grams}, deleted={deleted}"
@@ -66,7 +67,7 @@ def record_low(
             logging.info("Duplicate low sugar")
             should_bump_revision = False
     if should_bump_revision:
-        bump_revision()
+        bump_revision(redis_client)
         call_webhooks(
             "low:new",
             {
@@ -90,6 +91,7 @@ def _value_to_low_record(member: bytes) -> LowRecord:
 
 def get_latest_low_records(last_n: int = 288) -> List[LowRecord]:
     """Gets the latest last_n low records."""
+    redis_client = assert_get_current_request_redis_client()
     records = []
     # use zrange to return the last last_n entries ranked by score
     res = redis_client.zrange(_key_set, -last_n, -1)

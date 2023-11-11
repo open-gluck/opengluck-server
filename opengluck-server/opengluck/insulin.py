@@ -7,8 +7,8 @@ from typing import List, TypedDict
 from flask import Response
 
 from .config import tz
-from .login import assert_current_request_logged_in
-from .redis import bump_revision, redis_client
+from .login import assert_get_current_request_redis_client
+from .redis import bump_revision
 from .server import app
 from .utils import parse_timestamp
 from .webhooks import call_webhooks
@@ -29,14 +29,15 @@ class InsulinRecord(TypedDict):
 @app.route("/opengluck/insulin", methods=["DELETE"])
 def _clear_all_insulin_records():
     """Delete all insulin records."""
-    assert_current_request_logged_in()
+    redis_client = assert_get_current_request_redis_client()
     redis_client.delete(_key_set)
-    bump_revision()
+    bump_revision(redis_client)
     return Response(status=204)
 
 
 def record_insulin(*, id: str, timestamp: datetime, units: int, deleted: bool) -> None:
     """Record an insulin unit."""
+    redis_client = assert_get_current_request_redis_client()
     logging.info(
         f"Recording insulin unit, id={id}, timestamp={timestamp}, units={units}, "
         + f"deleted={deleted}"
@@ -62,7 +63,7 @@ def record_insulin(*, id: str, timestamp: datetime, units: int, deleted: bool) -
             logging.info("Duplicate insulin units")
             should_bump_revision = False
     if should_bump_revision:
-        bump_revision()
+        bump_revision(redis_client)
         call_webhooks(
             "insulin:new",
             {
@@ -86,6 +87,7 @@ def _value_to_insulin_record(member: bytes) -> InsulinRecord:
 
 def get_latest_insulin_records(last_n: int = 288) -> List[InsulinRecord]:
     """Gets the latest last_n insulin records."""
+    redis_client = assert_get_current_request_redis_client()
     records = []
     # use zrange to return the last last_n entries ranked by score
     res = redis_client.zrange(_key_set, -last_n, -1)
@@ -129,6 +131,7 @@ def insert_insulin_records(insulin_records: List[dict]) -> InsertInsulinRecordsS
 
 def find_insulin_records(from_date: datetime, to_date: datetime) -> List[InsulinRecord]:
     """Find insulin records in the given time range."""
+    redis_client = assert_get_current_request_redis_client()
     from_ts = from_date.timestamp()
     to_ts = to_date.timestamp()
     from_ts = from_date.timestamp()

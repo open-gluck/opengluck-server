@@ -21,6 +21,7 @@ def is_app_request() -> bool:
 
 def _process_request():
     log_request_to_redis()
+    from .login import is_current_request_logged_in
     from .webhooks import call_webhooks
 
     try:
@@ -36,7 +37,9 @@ def _process_request():
         "cookies": dict(request.cookies),
         "data": data,
     }
-    call_webhooks("app_request", payload)
+
+    if is_current_request_logged_in():
+        call_webhooks("app_request", payload)
 
 
 @app.before_request
@@ -54,11 +57,11 @@ def _ping():
 
 @app.route("/opengluck/revision")
 def _get_revision_info():
-    from .login import assert_current_request_logged_in
+    from .login import assert_get_current_request_redis_client
 
-    assert_current_request_logged_in()
-    revision = get_revision()
-    revision_changed_at = get_revision_changed_at()
+    redis_client = assert_get_current_request_redis_client()
+    revision = get_revision(redis_client)
+    revision_changed_at = get_revision_changed_at(redis_client)
     return Response(
         status=200,
         response=json.dumps(

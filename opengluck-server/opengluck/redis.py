@@ -5,10 +5,14 @@ import os
 import redis
 
 _redis_port = int(os.environ.get("REDIS_PORT", 6379))
-redis_client = redis.Redis(host="localhost", port=_redis_port, db=0)
 
 
-def bump_revision() -> None:
+def get_redis_client(*, db: int) -> redis.Redis:
+    """Get a redis client."""
+    return redis.Redis(host="localhost", port=_redis_port, db=db)
+
+
+def bump_revision(redis_client: redis.Redis) -> None:
     """Bump the revision number."""
     p = redis_client.pipeline()
     p.incr("revision")
@@ -16,12 +20,12 @@ def bump_revision() -> None:
     p.execute()
 
 
-def get_revision() -> int:
+def get_revision(redis_client: redis.Redis) -> int:
     """Get the current revision number."""
     return int(redis_client.get("revision") or -1)
 
 
-def get_revision_changed_at() -> str:
+def get_revision_changed_at(redis_client: redis.Redis) -> str:
     """Get the date when the revision was changed."""
     revision_changed_at = redis_client.get("revision_changed_at")
     if not revision_changed_at:

@@ -8,8 +8,9 @@ from flask import Response, abort, request
 from redis import WatchError
 
 from .config import tz
-from .login import assert_current_request_logged_in
-from .redis import bump_revision, redis_client
+from .login import (assert_current_request_logged_in,
+                    assert_get_current_request_redis_client)
+from .redis import bump_revision
 from .server import app
 from .utils import parse_timestamp
 
@@ -32,6 +33,7 @@ def record_instant_glucose_data(
     device_id: str,
 ) -> None:
     """Record a new instant glucose reading."""
+    redis_client = assert_get_current_request_redis_client()
     ts = str(timestamp.timestamp())
 
     # find all records with the same timestamp, and check if they are for the same device
@@ -90,6 +92,7 @@ def get_latest_instant_glucose_records(
     last_n: int = 24 * 60,
 ) -> List[InstantGlucoseRecord]:
     """Gets the latest last_n instant glucose record."""
+    redis_client = assert_get_current_request_redis_client()
     records = []
     # use zrange to return the last last_n entries ranked by score
     res = redis_client.zrange(_key, -last_n, -1)
@@ -101,6 +104,7 @@ def get_latest_instant_glucose_records(
 
 def find_instant_glucose_records(from_date: datetime, to_date: datetime):
     """Find the instance glucose records in the given time range."""
+    redis_client = assert_get_current_request_redis_client()
     from_ts = from_date.timestamp()
     to_ts = to_date.timestamp()
     result = []
@@ -146,9 +150,9 @@ def insert_instant_glucose_records(
 @app.route("/opengluck/instant-glucose", methods=["DELETE"])
 def _clear_all_instant_glucose_records():
     """Delete all instant glucose records."""
-    assert_current_request_logged_in()
+    redis_client = assert_get_current_request_redis_client()
     redis_client.delete(_key)
-    bump_revision()
+    bump_revision(redis_client)
     return Response(status=204)
 
 
@@ -166,6 +170,8 @@ def _upload_instant_glucose_data():
     logging.info("Uploading instant glucose data")
     assert_current_request_logged_in()
     body = request.get_json()
+    if not body:
+        abort(400)
     records = body.get("instant-glucose-records", [])
     status = insert_instant_glucose_records(records)
     return Response(

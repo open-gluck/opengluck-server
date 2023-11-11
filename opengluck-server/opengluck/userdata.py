@@ -8,8 +8,7 @@ from typing import Any, Optional
 
 from flask import Response, request
 
-from .login import assert_current_request_logged_in
-from .redis import redis_client
+from .login import assert_get_current_request_redis_client
 from .server import app
 from .webhooks import call_webhooks
 
@@ -24,7 +23,7 @@ def _get_redis_key(key: str) -> str:
 @app.route("/opengluck/userdata/<key>", methods=["PUT"])
 def _set_userdata(key):
     """Set a value in the userdata."""
-    assert_current_request_logged_in()
+    redis_client = assert_get_current_request_redis_client()
 
     value = request.get_data()
 
@@ -43,12 +42,14 @@ def _set_userdata(key):
 
 def set_userdata(key: str, value: Any) -> None:
     """Set a value in the userdata."""
+    redis_client = assert_get_current_request_redis_client()
     redis_client.set(_get_redis_key(key), json.dumps(value))
     call_webhooks("userdata:set", {"key": key, "value": value})
 
 
 def get_userdata(key) -> Optional[Any]:
     """Get a value from the userdata."""
+    redis_client = assert_get_current_request_redis_client()
     value = redis_client.get(_get_redis_key(key))
 
     if value is None:
@@ -60,7 +61,7 @@ def get_userdata(key) -> Optional[Any]:
 @app.route("/opengluck/userdata/<key>")
 def _get_userdata(key):
     """Get a value from the userdata."""
-    assert_current_request_logged_in()
+    redis_client = assert_get_current_request_redis_client()
 
     value = redis_client.get(_get_redis_key(key))
 
@@ -73,7 +74,7 @@ def _get_userdata(key):
 @app.route("/opengluck/userdata/<key>/lpush", methods=["PUT"])
 def _lpush_userdata(key):
     """Push a value in front of a userdata list."""
-    assert_current_request_logged_in()
+    redis_client = assert_get_current_request_redis_client()
 
     value = request.get_data()
 
@@ -93,7 +94,7 @@ def _lpush_userdata(key):
 @app.route("/opengluck/userdata/<key>/lrange", methods=["GET"])
 def _lrange_userdata(key):
     """Reads value in front from a userdata list."""
-    assert_current_request_logged_in()
+    redis_client = assert_get_current_request_redis_client()
 
     value = request.get_data()
     start = int(request.args.get("start", "0"))
@@ -111,7 +112,7 @@ def _lrange_userdata(key):
 @app.route("/opengluck/userdata", methods=["GET"])
 def _list_userdata():
     """Gets a list of current userdata."""
-    assert_current_request_logged_in()
+    redis_client = assert_get_current_request_redis_client()
 
     result = []
     for key in redis_client.scan_iter("userdata:*"):
@@ -132,7 +133,7 @@ def _list_userdata():
 @app.route("/opengluck/userdata/<key>/zadd", methods=["PUT"])
 def _zset_userdata(key):
     """Adds a value to a sorted set."""
-    assert_current_request_logged_in()
+    redis_client = assert_get_current_request_redis_client()
 
     score = request.args.get("score")
     member = request.args.get("member")
@@ -150,7 +151,7 @@ def _zset_userdata(key):
 @app.route("/opengluck/userdata/<key>/zrange", methods=["GET"])
 def _zrange_userdata(key):
     """Adds a value to a sorted set."""
-    assert_current_request_logged_in()
+    redis_client = assert_get_current_request_redis_client()
 
     start = int(request.args.get("start", 0))
     end = int(request.args.get("end", 99))
