@@ -8,8 +8,8 @@ from typing import List, Optional, TypedDict
 from flask import Response
 
 from .config import tz
-from .login import assert_current_request_logged_in
-from .redis import bump_revision, redis_client
+from .login import assert_get_current_request_redis_client
+from .redis import bump_revision
 from .server import app
 from .utils import parse_timestamp
 from .webhooks import call_webhooks
@@ -51,9 +51,9 @@ class FoodRecord(TypedDict):
 @app.route("/opengluck/food", methods=["DELETE"])
 def _clear_all_food_records():
     """Delete all food records."""
-    assert_current_request_logged_in()
+    redis_client = assert_get_current_request_redis_client()
     redis_client.delete(_key_set)
-    bump_revision()
+    bump_revision(redis_client)
     return Response(status=204)
 
 
@@ -69,6 +69,7 @@ def record_food(
     remember_recording: bool,
 ) -> None:
     """Record a food."""
+    redis_client = assert_get_current_request_redis_client()
     logging.info(
         f"Recording food, id={id}, timestamp={timestamp}, deleted={deleted},"
         f"name={name}, carbs={carbs}, comps={comps}, "
@@ -111,7 +112,7 @@ def record_food(
             logging.info("Duplicate food")
             should_bump_revision = False
     if should_bump_revision:
-        bump_revision()
+        bump_revision(redis_client)
         call_webhooks(
             "food:new",
             {
@@ -145,6 +146,7 @@ def _value_to_food_record(member: bytes) -> FoodRecord:
 
 def get_latest_food_records(last_n: int = 288) -> List[FoodRecord]:
     """Gets the latest last_n food records."""
+    redis_client = assert_get_current_request_redis_client()
     records = []
     # use zrange to return the last last_n entries ranked by score
     res = redis_client.zrange(_key_set, -last_n, -1)

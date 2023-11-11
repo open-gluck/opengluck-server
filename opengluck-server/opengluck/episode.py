@@ -17,8 +17,9 @@ from redis import WatchError
 
 from .cgm import get_current_cgm_properties, set_current_cgm_device_properties
 from .config import merge_record_high_threshold, merge_record_low_threshold, tz
-from .login import assert_current_request_logged_in
-from .redis import bump_revision, redis_client
+from .login import (assert_current_request_logged_in,
+                    assert_get_current_request_redis_client)
+from .redis import bump_revision
 from .server import app
 from .webhooks import call_webhooks
 
@@ -61,6 +62,7 @@ def get_episodes_after_date(*, after_date: datetime) -> List[EpisodeRecord]:
     Returns:
         the list of episodes
     """
+    redis_client = assert_get_current_request_redis_client()
     ts = int(after_date.timestamp())
     res = redis_client.zrangebyscore(_key, "(" + str(ts), "+inf")
     logging.debug(f"get_episodes_after_date ts={ts}")
@@ -88,6 +90,7 @@ def get_last_episodes(
         last_n: the number of episodes to retrieve
         until_date: the date until which to retrieve episodes
     """
+    redis_client = assert_get_current_request_redis_client()
     if until_date is None:
         res = redis_client.zrevrange(_key, 0, last_n - 1)
     else:
@@ -150,6 +153,7 @@ def insert_episode(
     *, episode: Episode, timestamp: datetime, trigger_episode_changes: bool = True
 ) -> InsertEpisodeStatus:
     """Insert an episode."""
+    redis_client = assert_get_current_request_redis_client()
     # LATER DEPRECATED setting trigger_episode_changes to True is deprecated
     timestamp = datetime.fromtimestamp(timestamp.timestamp(), tz=tz)
     ts = str(timestamp.timestamp())
@@ -209,7 +213,7 @@ def insert_episode(
                     p.zremrangebyscore(_key, following_score, following_score)
 
             p.execute()
-            bump_revision()
+            bump_revision(redis_client)
             if trigger_episode_changes:
                 new_current_episode_record = get_current_episode_record()
                 if new_current_episode_record != previous_current_episode_record:
@@ -245,9 +249,9 @@ def insert_episode(
 @app.route("/opengluck/episode", methods=["DELETE"])
 def _clear_all_episodes():
     """Delete all episodes."""
-    assert_current_request_logged_in()
+    redis_client = assert_get_current_request_redis_client()
     redis_client.delete(_key)
-    bump_revision()
+    bump_revision(redis_client)
     return Response(status=204)
 
 

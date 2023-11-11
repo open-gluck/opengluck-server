@@ -82,6 +82,10 @@ The basic idea is:
 
 ## Concepts
 
+### Logins
+
+You can use multiple users in the OpenGlück server, each user will get its own, separate, data.
+
 ### User Data
 
 _User Data_ provides a system for values to be read and written given a key. This can be useful to have plugins share state or communicate.

@@ -11,8 +11,9 @@ from flask import Response, request
 from requests.adapters import HTTPAdapter, Retry
 
 from .jmespath import do_record_match_filter
-from .login import assert_current_request_logged_in
-from .redis import redis_client
+from .login import (assert_current_request_is_logged_in_as_admin,
+                    assert_get_current_request_login,
+                    assert_get_current_request_redis_client)
 from .server import app
 
 _MAX_ITEMS = 100
@@ -20,7 +21,7 @@ _WEBHOOK_TIMEOUT = 2
 
 _s = requests.Session()
 
-retries = Retry(total=0, backoff_factor=0.1, status_forcelist=[500, 502, 503, 504])
+retries = Retry(total=0, backoff_factor=1, status_forcelist=[500, 502, 503, 504])
 
 _s.mount("http://", HTTPAdapter(max_retries=retries))
 _s.mount("https://", HTTPAdapter(max_retries=retries))
@@ -28,7 +29,7 @@ _s.mount("https://", HTTPAdapter(max_retries=retries))
 
 @app.route("/opengluck/webhooks/<webhook>")
 def _get_webhook(webhook):
-    assert_current_request_logged_in()
+    redis_client = assert_get_current_request_redis_client()
     webhooks = []
     for key, value in redis_client.hgetall(f"webhooks:{webhook}").items():
         webhooks.append(
@@ -39,7 +40,8 @@ def _get_webhook(webhook):
 
 @app.route("/opengluck/webhooks/<webhook>", methods=["PUT"])
 def _create_webhook(webhook):
-    assert_current_request_logged_in()
+    redis_client = assert_get_current_request_redis_client()
+    assert_current_request_is_logged_in_as_admin()
     data = request.get_json()
 
     id = str(uuid4())
@@ -49,7 +51,7 @@ def _create_webhook(webhook):
 
 @app.route("/opengluck/webhooks/<webhook>", methods=["DELETE"])
 def _delete_webhook(webhook):
-    assert_current_request_logged_in()
+    redis_client = assert_get_current_request_redis_client()
 
     redis_client.delete(f"webhooks:{webhook}")
     redis_client.delete(f"last-webhooks:{webhook}")
@@ -58,7 +60,7 @@ def _delete_webhook(webhook):
 
 @app.route("/opengluck/webhooks/<webhook>/<id>", methods=["DELETE"])
 def _delete_webhook_id(webhook, id):
-    assert_current_request_logged_in()
+    redis_client = assert_get_current_request_redis_client()
 
     redis_client.hdel(f"webhooks:{webhook}", id)
     return Response(status=204)
@@ -66,7 +68,7 @@ def _delete_webhook_id(webhook, id):
 
 @app.route("/opengluck/webhooks/<webhook>/last")
 def _get_last_webhooks(webhook):
-    assert_current_request_logged_in()
+    redis_client = assert_get_current_request_redis_client()
     filter = request.args.get("filter", "")
     last_n = int(request.args.get("last_n", _MAX_ITEMS))
 
@@ -87,6 +89,7 @@ def _call_webhook(id: str, webhook: dict, data: Any):
     url = webhook["url"]
     filter = webhook.get("filter", "")
     include_last = webhook.get("include_last", False)
+    login = assert_get_current_request_login()
     if do_record_match_filter(data, filter):
 
         logging.info(f"Calling webhook {url}")
@@ -101,7 +104,10 @@ def _call_webhook(id: str, webhook: dict, data: Any):
                 "POST",
                 url,
                 data=json.dumps(data),
-                headers={"content-type": "application/json"},
+                headers={
+                    "content-type": "application/json",
+                    "x-opengluck-login": login,
+                },
                 allow_redirects=False,
                 timeout=_WEBHOOK_TIMEOUT,
             )
@@ -111,6 +117,7 @@ def _call_webhook(id: str, webhook: dict, data: Any):
 
 def call_webhooks(webhook: str, data: Any):
     """Call all webhooks for the given webhook name."""
+    redis_client = assert_get_current_request_redis_client()
 
     def _impl():
         for key, value in redis_client.hgetall(f"webhooks:{webhook}").items():

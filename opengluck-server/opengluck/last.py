@@ -6,14 +6,11 @@ from typing import List
 from flask import Response, request
 
 from .food import FoodRecord, get_latest_food_records
-from .glucose import (
-    GlucoseRecord,
-    GlucoseRecordType,
-    get_latest_glucose_records,
-    get_merged_glucose_records,
-)
+from .glucose import (GlucoseRecord, GlucoseRecordType,
+                      get_latest_glucose_records, get_merged_glucose_records)
 from .insulin import InsulinRecord, get_latest_insulin_records
-from .login import assert_current_request_logged_in
+from .login import (assert_current_request_logged_in,
+                    assert_get_current_request_redis_client)
 from .low import LowRecord, get_latest_low_records
 from .redis import get_revision
 from .server import app
@@ -104,9 +101,9 @@ def get_last(
 
 @app.route("/opengluck/last")
 def _get_last_route():
-    assert_current_request_logged_in()
+    redis_client = assert_get_current_request_redis_client()
 
-    revision = get_revision()
+    revision = get_revision(redis_client)
     if_none_match = request.headers.get("if-none-match")
     if if_none_match is not None and if_none_match == str(revision):
         logging.debug("Sending 304")

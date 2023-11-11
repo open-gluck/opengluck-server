@@ -9,15 +9,13 @@ from typing import List, Optional, TypedDict
 
 from flask import Response, abort, request
 
-from .cgm import (
-    do_we_have_realtime_cgm_data,
-    get_current_cgm_properties,
-    set_current_cgm_device_properties,
-)
+from .cgm import (do_we_have_realtime_cgm_data, get_current_cgm_properties,
+                  set_current_cgm_device_properties)
 from .config import merge_record_high_threshold, merge_record_low_threshold, tz
 from .instant_glucose import record_instant_glucose_data
-from .login import assert_current_request_logged_in
-from .redis import bump_revision, redis_client
+from .login import (assert_current_request_logged_in,
+                    assert_get_current_request_redis_client)
+from .redis import bump_revision
 from .server import app
 from .utils import parse_timestamp
 from .webhooks import call_webhooks
@@ -52,6 +50,7 @@ def record_glucose_data(
 ) -> None:
     """Record a new glucose reading."""
     # LATER DEPRECATED setting trigger_episode_changes to True is deprecated
+    redis_client = assert_get_current_request_redis_client()
     key = _key(record_type)
     ts = str(timestamp.timestamp())
     logging.info(f"Recording glucose data, key={key}, ts={ts}, mgDl={mgDl}")
@@ -72,7 +71,7 @@ def record_glucose_data(
             logging.info("Duplicate glucose record, not bumping revision")
             should_bump_revision = False
     if should_bump_revision:
-        bump_revision()
+        bump_revision(redis_client)
         call_webhooks(
             f"glucose:new:{record_type.value}",
             {"timestamp": timestamp.isoformat(), "mgDl": mgDl},
@@ -106,6 +105,7 @@ def get_latest_glucose_records(
     record_type: GlucoseRecordType, last_n: int = 288
 ) -> List[GlucoseRecord]:
     """Gets the latest last_n records of a given type."""
+    redis_client = assert_get_current_request_redis_client()
     records = []
     key = _key(record_type)
     # use zrange to return the last last_n entries ranked by score
@@ -134,6 +134,7 @@ def _get_merged_glucose_records_impl(
     last_n_historic: int = 288, last_n_scan: int = 288
 ) -> List[GlucoseRecord]:
     """Gets last historic records, and all more recent scan records."""
+    redis_client = assert_get_current_request_redis_client()
     records_historic = get_latest_glucose_records(
         GlucoseRecordType.historic, last_n=last_n_historic
     )
@@ -321,11 +322,11 @@ def just_updated_glucose(
 @app.route("/opengluck/glucose", methods=["DELETE"])
 def _clear_all_glucose_records():
     """Delete all glucose records."""
-    assert_current_request_logged_in()
+    redis_client = assert_get_current_request_redis_client()
     redis_client.delete(_key(GlucoseRecordType.historic))
     redis_client.delete(_key(GlucoseRecordType.scan))
     redis_client.delete(_key_last_used_scan)
-    bump_revision()
+    bump_revision(redis_client)
     return Response(status=204)
 
 
@@ -416,6 +417,7 @@ def find_glucose_records(
     record_type: GlucoseRecordType, from_date: datetime, to_date: datetime
 ) -> List[GlucoseRecord]:
     """Find glucose records in the given time range."""
+    redis_client = assert_get_current_request_redis_client()
     from_ts = from_date.timestamp()
     to_ts = to_date.timestamp()
     key = _key(record_type)

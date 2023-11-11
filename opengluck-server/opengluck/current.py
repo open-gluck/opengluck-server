@@ -5,12 +5,9 @@ from flask import Response, request
 
 from .cgm import do_we_have_realtime_cgm_data
 from .episode import get_current_episode_record
-from .glucose import (
-    GlucoseRecordType,
-    get_latest_glucose_records,
-    get_merged_glucose_records,
-)
-from .login import assert_current_request_logged_in
+from .glucose import (GlucoseRecordType, get_latest_glucose_records,
+                      get_merged_glucose_records)
+from .login import assert_get_current_request_redis_client
 from .redis import get_revision
 from .server import app
 from .utils import parse_timestamp
@@ -36,9 +33,9 @@ def _get_current_data():
 def _handle_get_current(
     *, current_glucose_record_field_name: str, last_historic_field_name: str
 ):
-    assert_current_request_logged_in()
+    redis_client = assert_get_current_request_redis_client()
 
-    revision = get_revision()
+    revision = get_revision(redis_client)
     if_none_match = request.headers.get("if-none-match")
     if if_none_match is not None and if_none_match == str(revision):
         logging.debug("Sending 304")
