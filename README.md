@@ -173,16 +173,16 @@ This can be use by clients to visually show your lows and provide visual cues th
 
 ### Episodes
 
-An *episode* is used to convey a state, without providing a blood glucose measurement.
+An _episode_ is used to convey a state, without providing a blood glucose measurement.
 
 Episodes can be one of:
 
 - `unknown`: when no value is known (can be used when you don't have a sensor)
 - `disconnected`: when the sensor is disconnected (e.g. out of reach of Bluetooth)
 - `error`: when an error occured
-- `low`: when blood glucose is *low*
+- `low`: when blood glucose is _low_
 - `normal`: when blood glucose is in range
-- `high`: when blood glucose is *high*
+- `high`: when blood glucose is _high_
 
 ## Environment
 
