@@ -170,6 +170,8 @@ def _upload_instant_glucose_data():
     logging.info("Uploading instant glucose data")
     assert_current_request_logged_in()
     body = request.get_json()
+    if not body:
+        abort(400)
     records = body.get("instant-glucose-records", [])
     status = insert_instant_glucose_records(records)
     return Response(

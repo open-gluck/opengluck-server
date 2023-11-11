@@ -7,7 +7,7 @@ import logging
 from datetime import datetime
 from multiprocessing import Lock
 
-from flask import Response, request
+from flask import Response, abort, request
 
 from .episode import (get_current_episode_record, get_episode_for_mgdl,
                       get_episodes_after_date, insert_episode, insert_episodes,
@@ -31,6 +31,8 @@ def _upload_data_data():
     with _lock:
         assert_current_request_logged_in()
         body = request.get_json()
+        if not body:
+            abort(400)
         logging.debug(f"(upload) start with body: {body}")
 
         current_cgm_device_properties = body.get("current-cgm-device-properties", None)

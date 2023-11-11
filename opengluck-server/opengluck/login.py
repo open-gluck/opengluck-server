@@ -203,6 +203,8 @@ def _check_accounts():
 @app.route("/opengluck/create-account", methods=["POST"])
 def _create_account():
     data = request.get_json()
+    if not data:
+        abort(400)
     assert_current_request_is_logged_in_as_admin()
     token = create_account(data["login"], data["password"])
 
@@ -212,6 +214,8 @@ def _create_account():
 @app.route("/opengluck/login", methods=["POST"])
 def _login():
     data = request.get_json()
+    if not data:
+        abort(400)
     token = get_token(data["login"], data["password"])
 
     return Response(json.dumps({"token": token}), content_type="application/json")
@@ -249,6 +253,7 @@ def assert_current_request_is_logged_in_as_admin() -> None:
     if not is_current_request_logged_in():
         abort(401)
     token = get_current_request_token()
+    assert token
     scope = get_token_scope(token)
     if scope != "admin":
         abort(403)
