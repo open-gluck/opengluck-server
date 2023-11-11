@@ -13,36 +13,36 @@ from .server import app  # , cors_headers
 
 _target = os.environ.get("TARGET", "production")
 
-_redis_client_users = get_redis_client(db=0)
+_redis_client_zero = get_redis_client(db=0)
 _dev_magic_token = "dev-token"
 _userdb_key = "userdb"
 
 
 def do_we_have_any_accounts() -> bool:
     """Check if we already have at least one account."""
-    return _redis_client_users.hlen("users") > 0
+    return _redis_client_zero.hlen("users") > 0
 
 
 def migrate_to_multi_user() -> None:
     """Migrate to multi-user."""
     # loop over all keys
-    for key in _redis_client_users.scan_iter():
+    for key in _redis_client_zero.scan_iter():
         # skip the users and http_requests key
         if key == b"users" or key == b"http_requests":
             continue
         # is it a token?
         if key.startswith(b"token:"):
             # delete it
-            _redis_client_users.delete(key)
+            _redis_client_zero.delete(key)
         else:
             # move the key to db=1
-            _redis_client_users.move(key, 1)
+            _redis_client_zero.move(key, 1)
 
 
 def _get_next_available_db() -> int:
     db = 1
     while True:
-        dbuser = _redis_client_users.hget(_userdb_key, f"{db}")
+        dbuser = _redis_client_zero.hget(_userdb_key, f"{db}")
         if dbuser is None:
             return db
         # yield to other threads
@@ -57,13 +57,13 @@ def create_account(login: str, password: str) -> None:
         login: The login of the user.
         password: The password of the user.
     """
-    previous_user_check = _redis_client_users.hget("users", login)
+    previous_user_check = _redis_client_zero.hget("users", login)
     if previous_user_check is not None:
         logging.info(f"User {login} already exists")
         abort(409)
     db = _get_next_available_db()
-    _redis_client_users.hset(_userdb_key, f"{db}", login)
-    _redis_client_users.hset(
+    _redis_client_zero.hset(_userdb_key, f"{db}", login)
+    _redis_client_zero.hset(
         "users", login, json.dumps({"password": password, "db": db})
     )
 
@@ -74,7 +74,7 @@ def delete_account(login: str) -> None:
     Args:
         login: The login of the user.
     """
-    previous_user_check = _redis_client_users.hget("users", login)
+    previous_user_check = _redis_client_zero.hget("users", login)
     if previous_user_check is None:
         logging.info(f"User {login} does not exists")
         abort(404)
@@ -84,7 +84,7 @@ def delete_account(login: str) -> None:
     assert type(db) == int and db > 0
     redis_client_user = get_redis_client(db=db)
     redis_client_user.flushdb()
-    _redis_client_users.hdel("users", login)
+    _redis_client_zero.hdel("users", login)
 
 
 def get_token(login: str, password: str, scope: str = "admin") -> str:
@@ -104,7 +104,7 @@ def get_token(login: str, password: str, scope: str = "admin") -> str:
     """
     logging.debug(f"Checking login {login} and password (*hidden*)")
 
-    user = _redis_client_users.hget("users", login)
+    user = _redis_client_zero.hget("users", login)
     if user is None:
         logging.debug("User not found")
         abort(401)
@@ -117,7 +117,7 @@ def get_token(login: str, password: str, scope: str = "admin") -> str:
     token = uuid.uuid4().hex
     token_data = json.dumps({"login": login, "scope": scope})
     logging.debug(f"User OK, generated token {token}")
-    _redis_client_users.setex(f"token:{token}", 2 * 365 * 86400, token_data)
+    _redis_client_zero.setex(f"token:{token}", 2 * 365 * 86400, token_data)
     return token
 
 
@@ -128,7 +128,7 @@ def get_token_login(token: str) -> Optional[str]:
         token: The token to check.
     """
     logging.debug(f"Checking token {token}")
-    token_data = _redis_client_users.get(f"token:{token}")
+    token_data = _redis_client_zero.get(f"token:{token}")
     if token_data is None:
         logging.debug("Token not found")
         return None
@@ -145,7 +145,7 @@ def get_token_scope(token: str) -> Optional[str]:
         token: The token to check.
     """
     logging.debug(f"Checking token scope {token}")
-    token_data = _redis_client_users.get(f"token:{token}")
+    token_data = _redis_client_zero.get(f"token:{token}")
     if token_data is None:
         logging.debug("Token not found")
         return None
@@ -164,7 +164,7 @@ def get_token_user(token: str) -> Optional[str]:
     login = get_token_login(token)
     if login is None:
         return None
-    user_data = _redis_client_users.hget("users", login)
+    user_data = _redis_client_zero.hget("users", login)
     if user_data is None:
         logging.debug("User not found for token")
         return None
@@ -265,7 +265,7 @@ def assert_get_current_request_login() -> str:
     login = get_token_login(token)
     if login is None:
         abort(401)
-    user_data = _redis_client_users.hget("users", login)
+    user_data = _redis_client_zero.hget("users", login)
     if user_data is None:
         abort(401)
     return login
