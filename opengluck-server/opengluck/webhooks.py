@@ -84,20 +84,16 @@ def _get_last_webhooks(webhook):
     return Response(json.dumps(last_webhooks), content_type="application/json")
 
 
-def _call_webhook(id: str, webhook: dict, data: Any):
+def _call_webhook(id: str, webhook: dict, data: Any, login: str, last: dict):
     """Call the given webhook."""
     url = webhook["url"]
     filter = webhook.get("filter", "")
     include_last = webhook.get("include_last", False)
-    login = assert_get_current_request_login()
     if do_record_match_filter(data, filter):
 
         logging.info(f"Calling webhook {url}")
 
         if include_last:
-            from .last import get_last
-
-            last = get_last()
             data = {"data": data, "last": last}
         try:
             _s.request(
@@ -117,13 +113,17 @@ def _call_webhook(id: str, webhook: dict, data: Any):
 
 def call_webhooks(webhook: str, data: Any):
     """Call all webhooks for the given webhook name."""
+    from .last import get_last
+
     redis_client = assert_get_current_request_redis_client()
+    login = assert_get_current_request_login()
+    last = get_last()
 
     def _impl():
         for key, value in redis_client.hgetall(f"webhooks:{webhook}").items():
             id = key.decode("utf-8")
             webhook_value: dict = json.loads(value.decode("utf-8"))
-            _call_webhook(id, webhook_value, data)
+            _call_webhook(id, webhook_value, data, login, last)
 
         redis_client.lpush(
             f"last-webhooks:{webhook}",
