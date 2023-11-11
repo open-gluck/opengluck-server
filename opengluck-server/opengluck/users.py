@@ -1,6 +1,7 @@
 import json
 
 from flask import Response
+
 from opengluck.login import assert_current_request_is_logged_in_as_admin
 
 from .redis import get_redis_client

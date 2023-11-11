@@ -3,4 +3,7 @@
 set -e
 . dev-tools/scripts/setup-python.sh
 
-black --check --diff --color .
+for file in $(find opengluck -name "*.py"); do
+  echo "Checking $file"
+  cat "$file" | isort --filename "$file" - --multi-line 3 --trailing-comma | black --check - --diff
+done
