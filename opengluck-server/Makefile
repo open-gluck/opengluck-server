@@ -49,5 +49,11 @@ prettier-root:
 release:
 	scripts/release
 
+create-account:
+	@if [ -z "$(username)" -o -z "$(password)" ]; then \
+		echo "Usage: make create-account username=<username> password=<password>" >&2 && exit 1; \
+	else \
+		docker-compose exec dev /opt/venv/bin/python scripts/create-account.py $(username) $(password); \
+	fi
 
 .PHONY: build start dev clean certificate profile dev-tools lint test flake8 isort pyright pydocstyle release
