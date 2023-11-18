@@ -1,6 +1,7 @@
 """Main server module."""
 import json
 import logging
+import random
 import sys
 
 from flask import Flask, Response, request
@@ -54,6 +55,10 @@ def _ping():
     assert_current_request_logged_in()
     return "pong"
 
+
+@app.route("/opengluck/random")
+def _random():
+    return Response(json.dumps({"random": random.random()}), content_type="application/json")
 
 @app.route("/opengluck/revision")
 def _get_revision_info():
