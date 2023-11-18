@@ -96,7 +96,7 @@ def _call_webhook(id: str, webhook: dict, data: Any, login: str, last: dict):
         if include_last:
             data = {"data": data, "last": last}
         try:
-            _s.request(
+            resp = _s.request(
                 "POST",
                 url,
                 data=json.dumps(data),
@@ -107,6 +107,10 @@ def _call_webhook(id: str, webhook: dict, data: Any, login: str, last: dict):
                 allow_redirects=False,
                 timeout=_WEBHOOK_TIMEOUT,
             )
+            if not resp.ok:
+                logging.debug(
+                    f"Calling webhook {url} returned non-200 response: {resp.status_code} {resp.text}"
+                )
         except Exception as e:
             logging.debug(f"Calling webhook {url} failed: {e}")
 
