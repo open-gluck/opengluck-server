@@ -45,6 +45,13 @@ def _process_request():
 
 
 @app.before_request
+def _prevent_recursive_calls():
+    # check if we have a x-opengluck-login header
+    # if so, this call is the result of a webhook call and we should stop further processing to avoid infinite loops
+    if "x-opengluck-login" in request.headers:
+        return Response(status=423)
+
+@app.before_request
 def _log_request():
     _process_request()
 
