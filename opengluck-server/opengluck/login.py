@@ -248,6 +248,17 @@ def is_current_request_logged_in() -> bool:
     return True
 
 
+def is_current_request_logged_in_as_admin() -> bool:
+    """Checks if the current request is logged in as an admin."""
+    if not is_current_request_logged_in():
+        return False
+    token = get_current_request_token()
+    assert token
+    scope = get_token_scope(token)
+    if scope != "admin":
+        return False
+    return True
+
 def assert_current_request_logged_in() -> None:
     """Asserts that the current request is logged in."""
     if not is_current_request_logged_in():

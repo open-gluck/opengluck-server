@@ -22,7 +22,8 @@ def is_app_request() -> bool:
 
 def _process_request():
     log_request_to_redis()
-    from .login import is_current_request_logged_in
+    from opengluck.login import is_current_request_logged_in_as_admin
+
     from .webhooks import call_webhooks
 
     try:
@@ -39,7 +40,7 @@ def _process_request():
         "data": data,
     }
 
-    if is_current_request_logged_in():
+    if is_current_request_logged_in_as_admin():
         call_webhooks("app_request", payload)
 
 
