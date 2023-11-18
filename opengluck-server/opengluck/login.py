@@ -124,10 +124,12 @@ def get_token_login(token: str) -> Optional[str]:
     Args:
         token: The token to check.
     """
-    logging.debug(f"Checking token {token}")
+    logging.debug(f"Checking token login {token}")
+    if _target == "dev" and token == _dev_magic_token:
+        return "dev-magic-token-login"
     token_data = _redis_client_zero.get(f"token:{token}")
     if token_data is None:
-        logging.debug("Token not found")
+        logging.debug("Token data not found")
         return None
     token_data = json.loads(token_data.decode("utf-8"))
     assert "login" in token_data
@@ -142,9 +144,11 @@ def get_token_scope(token: str) -> Optional[str]:
         token: The token to check.
     """
     logging.debug(f"Checking token scope {token}")
+    if _target == "dev" and token == _dev_magic_token:
+        return "admin"
     token_data = _redis_client_zero.get(f"token:{token}")
     if token_data is None:
-        logging.debug("Token not found")
+        logging.debug("Token scope not found")
         return None
     token_data = json.loads(token_data.decode("utf-8"))
     assert "scope" in token_data
@@ -159,6 +163,8 @@ def get_token_user(token: str) -> Optional[str]:
         token: The token to check.
     """
     login = get_token_login(token)
+    if _target == "dev" and token == _dev_magic_token:
+        return "{}"
     if login is None:
         return None
     user_data = _redis_client_zero.hget("users", login)
@@ -267,6 +273,8 @@ def assert_get_current_request_login() -> str:
     login = get_token_login(token)
     if login is None:
         abort(401)
+    if _target == "dev" and token == _dev_magic_token:
+        return login
     user_data = _redis_client_zero.hget("users", login)
     if user_data is None:
         abort(401)
