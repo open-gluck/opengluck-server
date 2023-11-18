@@ -1,6 +1,7 @@
 import json
 import logging
 import os
+import sys
 from datetime import datetime
 from threading import Thread
 from typing import Any
@@ -18,6 +19,12 @@ from .server import app
 
 _MAX_ITEMS = 100
 _WEBHOOK_TIMEOUT = 2
+
+if os.getenv("MAX_WEBHOOK_CALLS", ""):
+    _MAX_WEBHOOK_CALLS: int = min(sys.maxsize, max(0, int(os.getenv("MAX_WEBHOOK_CALLS", ""))))
+else:
+    _MAX_WEBHOOK_CALLS: int = sys.maxsize
+
 
 _s = requests.Session()
 
@@ -89,6 +96,7 @@ def _call_webhook(id: str, webhook: dict, data: Any, login: str, last: dict):
     url = webhook["url"]
     filter = webhook.get("filter", "")
     include_last = webhook.get("include_last", False)
+    available_calls = _MAX_WEBHOOK_CALLS
     if do_record_match_filter(data, filter):
 
         logging.info(f"Calling webhook {url}")
@@ -96,6 +104,10 @@ def _call_webhook(id: str, webhook: dict, data: Any, login: str, last: dict):
         if include_last:
             data = {"data": data, "last": last}
         try:
+            available_calls -= 1
+            if available_calls < 0:
+                logging.info("Reached too many webhooks calls, we had %s call(s) total", _MAX_WEBHOOK_CALLS)
+                return
             resp = _s.request(
                 "POST",
                 url,
