@@ -83,6 +83,18 @@ def delete_account(login: str) -> None:
     redis_client_user.flushdb()
     _redis_client_zero.hdel("users", login)
 
+def _generate_token(login: str, scope: str) -> str:
+    """Generates a token for a user.
+
+    Args:
+        login: The login of the user.
+        scope: The scope of the token.
+    """
+    token = uuid.uuid4().hex
+    token_data = json.dumps({"login": login, "scope": scope})
+    _redis_client_zero.setex(f"token:{token}", 2 * 365 * 86400, token_data)
+    return token
+
 
 def get_token(login: str, password: str, scope: str = "admin") -> str:
     """Returns a token for a user, given its password.
@@ -111,11 +123,7 @@ def get_token(login: str, password: str, scope: str = "admin") -> str:
         logging.debug("Password does not match")
         abort(401)
 
-    token = uuid.uuid4().hex
-    token_data = json.dumps({"login": login, "scope": scope})
-    logging.debug(f"User OK, generated token {token}")
-    _redis_client_zero.setex(f"token:{token}", 2 * 365 * 86400, token_data)
-    return token
+    return _generate_token(login, scope)
 
 
 def get_token_login(token: str) -> Optional[str]:
@@ -198,7 +206,13 @@ def is_token_valid(token: str) -> bool:
     Args:
         token: The token to check.
     """
-    return get_token_user(token) is not None
+    user = get_token_user(token)
+    if user is None:
+        return False
+    user_data = json.loads(user)
+    if "enabled" in user_data and user_data["enabled"] == False:
+        return False
+    return True
 
 
 @app.route("/opengluck/check-accounts")
@@ -217,6 +231,38 @@ def _create_account():
     return Response(json.dumps({"token": token}))
 
 
+def _set_account_enabled(login: str, enabled: bool) -> None:
+    user = _redis_client_zero.hget("users", login)
+    if user is None:
+        abort(404)
+    user_data = json.loads(user)
+    user_data["enabled"] = enabled
+    _redis_client_zero.hset("users", login, json.dumps(user_data))
+
+@app.route("/opengluck/enable-account", methods=["POST"])
+def _enable_account():
+    data = request.get_json()
+    if not data:
+        abort(400)
+    assert_current_request_is_logged_in_as_admin()
+    if not "login"  in data:
+        abort(400)
+    login = data["login"]
+    _set_account_enabled(login, True)
+    return Response(json.dumps({"status": "ok"}), content_type="application/json")
+
+@app.route("/opengluck/disable-account", methods=["POST"])
+def _disable_account():
+    data = request.get_json()
+    if not data:
+        abort(400)
+    assert_current_request_is_logged_in_as_admin()
+    if not "login"  in data:
+        abort(400)
+    login = data["login"]
+    _set_account_enabled(login, False)
+    return Response(json.dumps({"status": "ok"}), content_type="application/json")
+
 @app.route("/opengluck/login", methods=["POST"])
 def _login():
     data = request.get_json()
@@ -225,6 +271,18 @@ def _login():
     token = get_token(data["login"], data["password"])
 
     return Response(json.dumps({"token": token}), content_type="application/json")
+
+@app.route("/opengluck/generate-token", methods=["POST"])
+def _generate_token_route():
+    assert_current_request_is_logged_in_as_admin()
+    data = request.get_json()
+    if not data or not "login" in data or not "scope" in data:
+        abort(400)
+    login = data["login"]
+    scope = data["scope"]
+    token = _generate_token(login, scope)
+    return Response(json.dumps({"token": token}), content_type="application/json")
+
 
 
 def get_current_request_token() -> Optional[str]:
@@ -296,6 +354,7 @@ def assert_get_current_request_redis_client() -> redis.Redis:
     """Asserts and returns we have a redis client for the current request."""
     if g.get("redis_client") is not None:
         return g.redis_client
+    assert_current_request_logged_in()
     token = get_current_request_token()
     if token is None:
         abort(401)
