@@ -7,15 +7,16 @@ export default function ApiExplorer() {
   const [path, setPath] = useState(
     "/opengluck/instant-glucose/find?from=2023-01-01&to=2023-12-31"
   );
-  const [paylaod, setPayload] = useState("");
+  const [payload, setPayload] = useState("");
   const [response, setResponse] = useState("");
   const [isError, setIsError] = useState(false);
   const token = useToken();
   const handleSend = useCallback(async () => {
     const res = await fetch(`${serverUrl}${path}`, {
       method,
-      ...(paylaod ? { body: paylaod } : {}),
+      ...(payload ? { body: payload } : {}),
       headers: {
+        ...(payload ? { "Content-Type": "application/json" } : {}),
         authorization: `Bearer ${token}`,
       },
     });
@@ -31,7 +32,7 @@ export default function ApiExplorer() {
     } catch (e) {
       setResponse(await res2.text());
     }
-  }, [method, path, paylaod, token]);
+  }, [method, path, payload, token]);
   const handleCopy = useCallback(() => {
     navigator.clipboard.writeText(response);
   }, [response]);
@@ -57,13 +58,13 @@ export default function ApiExplorer() {
           cols={80}
           rows={10}
           style={{ fontFamily: "monospace" }}
-          value={paylaod}
+          value={payload}
           onChange={(e) => setPayload(e.target.value)}
         />
       </pre>
       <button
         onClick={handleSend}
-        disabled={method === "GET" && paylaod !== ""}
+        disabled={method === "GET" && payload !== ""}
       >
         Send
       </button>
