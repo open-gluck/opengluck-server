@@ -14,6 +14,10 @@ export default function Home() {
         <h1>OpenGlück</h1>
         <h2>Data</h2>
         <h3>
+          <Link href="/add">Add Data</Link>
+        </h3>
+        Add new data.
+        <h3>
           <Link href="/current">Current Data</Link>
         </h3>
         View current data.

@@ -575,3 +575,32 @@ export function useExportData() {
     [token]
   );
 }
+
+export function useUploadData() {
+  const token = useToken();
+  return useCallback(
+    async ({
+      insulinRecords,
+      glucoseRecords,
+    }: {
+      insulinRecords: InsulinRecord[];
+      glucoseRecords: GlucoseRecord[];
+    }) => {
+      const res = await fetch(`${serverUrl}/opengluck/upload`, {
+        headers: {
+          authorization: `Bearer ${token}`,
+          "content-type": "application/json",
+        },
+        method: "POST",
+        body: JSON.stringify({
+          "insulin-records": insulinRecords,
+          "glucose-records": glucoseRecords,
+        }),
+      });
+      if (!res.ok) {
+        throw new Error(`Failed to upload data: ${await res.text()}`);
+      }
+    },
+    [token]
+  );
+}
