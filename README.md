@@ -2,7 +2,7 @@
 
 See [opengluck.com](https://www.opengluck.com/) for an overview of OpenGlück, and how the Server (pictured in top below) integrates with compatible apps:
 
-![Alt text](docs/apps.png)
+![Apps](docs/apps.png)
 
 While the server does not connect to third-party sensors, services or apps by itself, you can use plugins and compatible apps to send new data, or query the
 OpenGlück database.
