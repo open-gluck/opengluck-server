@@ -1,16 +1,17 @@
 # OpenGlück Server
 
-See the main page of the project for an overview of OpenGlück, and how the server integrates with compatible apps.
+See [opengluck.com](https://www.opengluck.com/) for an overview of OpenGlück, and how the Server (pictured in top below) integrates with compatible apps:
 
 ![Alt text](Apps.png)
 
-While the server does not connect to third-party services by itself, you can use plugins and apps to record new data or query the
+While the server does not connect to third-party sensors, services or apps by itself, you can use plugins and compatible apps to send new data, or query the
 OpenGlück database.
+
+Check out our [companion app](https://github.com/open-gluck/opengluck-ios) for an app that works with your iPhone, Apple Watch, Mac and even Apple TV, packed with widgets and complications.
 
 # Prerequisites
 
-- a server computer or virtual machine, that you can use to run the software (something small is more than enough, if looking
-  for a cloud instance you can use a `t2.small` with 16 GB of storage on AWS for around a dozen bucks per month)
+- a server computer or virtual machine, that you can use to run the software (a small cloud server would work)
 - some basic knowledge about how to configure an HTTPS proxy (we recommend
   using [CaddyServer](https://caddyserver.com) for a zero-touch configuration
   of LetsEncrypt)
