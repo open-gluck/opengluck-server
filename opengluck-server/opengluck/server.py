@@ -6,11 +6,31 @@ import sys
 
 from flask import Flask, Response, request
 from flask_cors import CORS
+from flask_limiter import Limiter
 
 from .http_request_log import log_request_to_redis
 from .redis import get_revision, get_revision_changed_at
 
+
+def _get_flask_limiter_key() -> str:
+    """Get the key to use for flask_limiter.
+
+    If we have an authorization header, we return its value, else we return the
+    IP address of the current request.
+    """
+    if "Authorization" in request.headers:
+        return request.headers["Authorization"]
+    return request.remote_addr or "no-ip"
+
+
+
 app = Flask("OpenGlück")
+limiter = Limiter(
+    _get_flask_limiter_key,
+    app=app,
+    default_limits=["10 per second", "60 per minute", "1000 per hour"],
+    storage_uri="memory://",
+)
 
 cors = CORS(app, resources={r"/opengluck/*": {"origins": "*"}})
 
