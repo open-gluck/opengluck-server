@@ -2,7 +2,7 @@
 
 See [opengluck.com](https://www.opengluck.com/) for an overview of OpenGlück, and how the Server (pictured in top below) integrates with compatible apps:
 
-![Alt text](Apps.png)
+![Alt text](docs/apps.png)
 
 While the server does not connect to third-party sensors, services or apps by itself, you can use plugins and compatible apps to send new data, or query the
 OpenGlück database.
@@ -66,9 +66,17 @@ I am told you can use Caddy like so (replace `example.com` with your domain name
 docker run caddy:latest caddy reverse-proxy --from example.com --to localhost:8080
 ```
 
+## 5. Connect
+
+Connect to your server. The first time you connect, you will be prompted for a username and a password, then you'll get the server home page:
+
+![Server Home Page](docs/server-homepage.png)
+
+Except when you're integrating with OpenGlück (ie writing your own plugins) or set up webhooks, you'll probably won't need to use the web interface much. (That's part of the reason its layout is quite *simple*, with practically zero CSS.)
+
 # Usage
 
-The OpenGlück server is a “dumb” piece of software, that does not attempt to collect glucose data by itself, or to perform actions when certain conditions occur.
+The OpenGlück server is a *dumb* piece of software, that does not attempt to collect glucose data by itself, or to perform actions when certain conditions occur.
 
 You are free to enable the plug-ins you want, or write your own if you'd like to.
 
@@ -88,9 +96,11 @@ having a low at night.
 
 ## Logins
 
-You can use multiple users in the OpenGlück server, each user will get its own, separate, data.
+You can use multiple users in the OpenGlück server, each user will get its own, separate, data. This is useful if you need to track the records of separate diabetics sharing the same server.
 
-Each login is associated with a token, that you can easily copy from the *API Access* route.
+Each login is associated with a token, that you can easily copy from the *API Access* route. 
+
+If you need *follower mode*, then, don't create any additional users, just use the same token for all your users.
 
 ## User Data
 
