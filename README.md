@@ -7,7 +7,7 @@ See [opengluck.com](https://www.opengluck.com/) for an overview of OpenGlück, a
 While the server does not connect to third-party sensors, services or apps by itself, you can use plugins and compatible apps to send new data, or query the
 OpenGlück database.
 
-Check out our [companion app](https://github.com/open-gluck/opengluck-ios) for an app that works with your iPhone, Apple Watch, Mac and even Apple TV, packed with widgets and complications.
+Check out our [OpenGlück app](https://github.com/open-gluck/opengluck-ios) for an app that works with your iPhone, Apple Watch, Mac and even Apple TV, packed with widgets and complications.
 
 # Prerequisites
 
