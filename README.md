@@ -41,7 +41,7 @@ NEXT_PUBLIC_APP_URL=https://public-url-of-your-app.example.com
 
 See the Environment section for more information about the variables you can configure.
 
-## 3. Run the opengluck server
+## 3. Run the OpenGlück server
 
 Run your server with Docker:
 
