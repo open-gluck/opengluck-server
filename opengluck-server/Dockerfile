@@ -50,4 +50,5 @@ USER opengluck
 FROM app
 COPY --from=builder --chown=opengluck:opengluck /app/app/node_modules/.next/standalone /app/app
 COPY --from=builder --chown=opengluck:opengluck /app/app/node_modules/.next/static /app/app/node_modules/.next/static
+RUN mkdir -p /app/data && chown opengluck:opengluck /app/data
 USER opengluck
