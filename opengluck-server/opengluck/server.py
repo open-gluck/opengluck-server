@@ -31,6 +31,9 @@ limiter = Limiter(
     default_limits=["10 per second", "60 per minute", "1000 per hour"],
     storage_uri="memory://",
 )
+if os.environ.get("CONTEXT") == "test":
+    # when running from pytest, we disable the limiter
+    limiter.enabled = False
 
 cors = CORS(app, resources={r"/opengluck/*": {"origins": "*"}})
 

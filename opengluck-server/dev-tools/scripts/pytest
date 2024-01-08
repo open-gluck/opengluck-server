@@ -33,7 +33,7 @@ function stop_redis_server() {
 until redis-cli -p $REDIS_PORT ping >/dev/null 2>&1; do sleep 0.1; done
 
 ret=0
-pytest --log-cli-level=DEBUG -vv -o cache_dir=/app/data/.pytest /app/opengluck || ret=$?
+CONTEXT=test pytest --log-cli-level=DEBUG -vv -o cache_dir=/app/data/.pytest /app/opengluck || ret=$?
 
 stop_redis_server
 

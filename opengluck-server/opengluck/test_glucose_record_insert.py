@@ -293,8 +293,8 @@ def test_insert_glucose_records_shift_historic():
             {
                 "previous": None,
                 "new": {
-                    "timestamp": "2023-04-22T14:15:00+02:00",
-                    "mgDl": 165,
+                    "timestamp": "2023-04-22T14:14:00+02:00",
+                    "mgDl": 164,
                     "record_type": "scan",
                 },
                 "cgm-properties": {"has-real-time": True},
@@ -330,8 +330,8 @@ def test_insert_glucose_records_shift_historic():
             {
                 "previous": None,
                 "new": {
-                    "timestamp": "2023-04-22T14:15:00+02:00",
-                    "mgDl": 165,
+                    "timestamp": "2023-04-22T14:14:00+02:00",
+                    "mgDl": 164,
                     "record_type": "scan",
                 },
                 "cgm-properties": {"has-real-time": True},
