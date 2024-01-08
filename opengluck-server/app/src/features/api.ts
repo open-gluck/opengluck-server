@@ -604,3 +604,34 @@ export function useUploadData() {
     [token]
   );
 }
+
+type HbA1cData = {
+  hba1c?: number;
+};
+
+export function useHbA1c(from: Date, to: Date) {
+  const token = useToken();
+  const { data, isLoading, error } = useQuery<HbA1cData>(
+    `hbA&c from ${from.toISOString()} to ${to.toISOString()}`,
+    async () => {
+      const res = await fetch(
+        `${serverUrl}/opengluck/hba1c?${new URLSearchParams({
+          from: from.toISOString(),
+          to: to.toISOString(),
+        })}`,
+        {
+          headers: {
+            authorization: `Bearer ${token}`,
+            "content-type": "application/json",
+          },
+          method: "POST",
+        }
+      );
+      if (!res.ok) {
+        throw new Error(`Failed to get HbA1c: ${await res.text()}`);
+      }
+      return res.json();
+    }
+  );
+  return { data, isLoading, error };
+}

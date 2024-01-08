@@ -29,6 +29,10 @@ export default function Home() {
           <Link href="/export">Export Data</Link>
         </h3>
         Export past data.
+        <h3>
+          <Link href="/hba1c">View HbA1c</Link>
+        </h3>
+        View HbA1c for today and past.
         <h2>Glucose Records</h2>
         <h3>
           <Link href="/glucose-record">Glucose Records</Link>

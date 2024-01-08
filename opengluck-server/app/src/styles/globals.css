@@ -33,6 +33,9 @@ td {
   border: 1px solid #ccc;
   padding: 0.1rem;
 }
+.hba1c {
+  text-align: right;
+}
 
 /* enable dark mode */
 @media (prefers-color-scheme: dark) {
