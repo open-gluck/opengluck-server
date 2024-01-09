@@ -630,7 +630,12 @@ export function useHbA1c(from: Date, to: Date) {
       if (!res.ok) {
         throw new Error(`Failed to get HbA1c: ${await res.text()}`);
       }
-      return res.json();
+      const json = await res.json();
+      console.log(
+        `HbA1c from ${from.toISOString()} to ${to.toISOString()}`,
+        json
+      );
+      return json;
     }
   );
   return { data, isLoading, error };
