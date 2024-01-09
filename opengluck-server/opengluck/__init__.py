@@ -6,6 +6,7 @@ from . import episode  # noqa: F401
 from . import export  # noqa: F401
 from . import food  # noqa: F401
 from . import glucose  # noqa: F401
+from . import hba1c  # noqa: F401
 from . import http_request_log  # noqa: F401
 from . import http_request_log_route  # noqa: F401
 from . import instant_glucose  # noqa: F401
