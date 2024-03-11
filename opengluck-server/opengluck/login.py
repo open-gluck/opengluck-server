@@ -225,7 +225,8 @@ def _create_account():
     data = request.get_json()
     if not data:
         abort(400)
-    assert_current_request_is_logged_in_as_admin()
+    if do_we_have_any_accounts():
+        assert_current_request_is_logged_in_as_admin()
     token = create_account(data["login"], data["password"])
 
     return Response(json.dumps({"token": token}))
