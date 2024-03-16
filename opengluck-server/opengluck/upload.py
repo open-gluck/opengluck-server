@@ -13,8 +13,10 @@ from .episode import (get_current_episode_record, get_episode_for_mgdl,
                       get_episodes_after_date, insert_episode, insert_episodes,
                       just_updated_episode)
 from .food import insert_food_records
-from .glucose import (get_current_glucose_record, insert_glucose_records,
-                      just_updated_glucose, set_current_cgm_device_properties)
+from .glucose import (get_current_glucose_record,
+                      get_last_just_updated_glucose_at, insert_glucose_records,
+                      just_updated_glucose, keep_scan_records_apart_duration,
+                      set_current_cgm_device_properties)
 from .insulin import insert_insulin_records
 from .login import (assert_current_request_logged_in,
                     assert_get_current_request_redis_client)
@@ -70,10 +72,23 @@ def _upload_data_data():
             )
             # check if the current glucose record has changed
             current_glucose_record = get_current_glucose_record()
+            last_just_updated_glucose_at = get_last_just_updated_glucose_at()
+            last_just_updated_glucose_is_old = (
+                last_just_updated_glucose_at is not None
+                and current_glucose_record
+                and (
+                    last_just_updated_glucose_at.timestamp()
+                    < datetime.fromisoformat(
+                        current_glucose_record["timestamp"]
+                    ).timestamp()
+                    - keep_scan_records_apart_duration
+                )
+            )
             if current_glucose_record is not None and (
                 previous_current_glucose_record is None
                 or previous_current_glucose_record["mgDl"]
                 != current_glucose_record["mgDl"]
+                or last_just_updated_glucose_is_old
             ):
                 if (
                     current_glucose_record is not None
