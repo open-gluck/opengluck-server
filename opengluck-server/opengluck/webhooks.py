@@ -21,7 +21,9 @@ _MAX_ITEMS = 100
 _WEBHOOK_TIMEOUT = 2
 
 if os.getenv("MAX_WEBHOOK_CALLS", ""):
-    _MAX_WEBHOOK_CALLS: int = min(sys.maxsize, max(0, int(os.getenv("MAX_WEBHOOK_CALLS", ""))))
+    _MAX_WEBHOOK_CALLS: int = min(
+        sys.maxsize, max(0, int(os.getenv("MAX_WEBHOOK_CALLS", "")))
+    )
 else:
     _MAX_WEBHOOK_CALLS: int = sys.maxsize
 
@@ -106,7 +108,10 @@ def _call_webhook(id: str, webhook: dict, data: Any, login: str, last: dict):
         try:
             available_calls -= 1
             if available_calls < 0:
-                logging.info("Reached too many webhooks calls, we had %s call(s) total", _MAX_WEBHOOK_CALLS)
+                logging.info(
+                    "Reached too many webhooks calls, we had %s call(s) total",
+                    _MAX_WEBHOOK_CALLS,
+                )
                 return
             resp = _s.request(
                 "POST",

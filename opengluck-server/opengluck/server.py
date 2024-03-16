@@ -24,7 +24,6 @@ def _get_flask_limiter_key() -> str:
     return request.remote_addr or "no-ip"
 
 
-
 app = Flask("OpenGlück")
 limiter = Limiter(
     _get_flask_limiter_key,
@@ -75,6 +74,7 @@ def _prevent_recursive_calls():
     if "x-opengluck-login" in request.headers:
         return Response(status=423)
 
+
 @app.before_request
 def _log_request():
     _process_request()
@@ -90,7 +90,10 @@ def _ping():
 
 @app.route("/opengluck/random")
 def _random():
-    return Response(json.dumps({"random": random.random()}), content_type="application/json")
+    return Response(
+        json.dumps({"random": random.random()}), content_type="application/json"
+    )
+
 
 @app.route("/opengluck/revision")
 def _get_revision_info():
