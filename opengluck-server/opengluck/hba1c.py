@@ -1,11 +1,10 @@
 """A class to retrieve HbA1c values."""
 import json
-import logging
-from datetime import datetime, timedelta
-from enum import Enum
+from datetime import timedelta
 from typing import List, Optional, TypedDict
 
 from flask import Response, abort, request
+
 from opengluck.glucose import (GlucoseRecord, GlucoseRecordType,
                                find_glucose_records)
 

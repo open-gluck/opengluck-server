@@ -148,6 +148,10 @@ def test_insert_stable_glucose_records_one_by_one():
         response = test_client.delete("/opengluck/glucose", headers=_headers)
         assert response.status_code == 204
         response = test_client.delete(
+            "/opengluck/webhooks/glucose:changed", headers=_headers
+        )
+        assert response.status_code == 204
+        response = test_client.delete(
             "/opengluck/userdata/last_just_updated_glucose_at", headers=_headers
         )
         assert response.status_code == 204

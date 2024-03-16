@@ -83,6 +83,7 @@ def delete_account(login: str) -> None:
     redis_client_user.flushdb()
     _redis_client_zero.hdel("users", login)
 
+
 def _generate_token(login: str, scope: str) -> str:
     """Generates a token for a user.
 
@@ -210,7 +211,7 @@ def is_token_valid(token: str) -> bool:
     if user is None:
         return False
     user_data = json.loads(user)
-    if "enabled" in user_data and user_data["enabled"] == False:
+    if "enabled" in user_data and user_data["enabled"] is False:
         return False
     return True
 
@@ -240,17 +241,19 @@ def _set_account_enabled(login: str, enabled: bool) -> None:
     user_data["enabled"] = enabled
     _redis_client_zero.hset("users", login, json.dumps(user_data))
 
+
 @app.route("/opengluck/enable-account", methods=["POST"])
 def _enable_account():
     data = request.get_json()
     if not data:
         abort(400)
     assert_current_request_is_logged_in_as_admin()
-    if not "login"  in data:
+    if "login" not in data:
         abort(400)
     login = data["login"]
     _set_account_enabled(login, True)
     return Response(json.dumps({"status": "ok"}), content_type="application/json")
+
 
 @app.route("/opengluck/disable-account", methods=["POST"])
 def _disable_account():
@@ -258,11 +261,12 @@ def _disable_account():
     if not data:
         abort(400)
     assert_current_request_is_logged_in_as_admin()
-    if not "login"  in data:
+    if "login" not in data:
         abort(400)
     login = data["login"]
     _set_account_enabled(login, False)
     return Response(json.dumps({"status": "ok"}), content_type="application/json")
+
 
 @app.route("/opengluck/login", methods=["POST"])
 def _login():
@@ -273,17 +277,17 @@ def _login():
 
     return Response(json.dumps({"token": token}), content_type="application/json")
 
+
 @app.route("/opengluck/generate-token", methods=["POST"])
 def _generate_token_route():
     assert_current_request_is_logged_in_as_admin()
     data = request.get_json()
-    if not data or not "login" in data or not "scope" in data:
+    if not data or "login" not in data or "scope" not in data:
         abort(400)
     login = data["login"]
     scope = data["scope"]
     token = _generate_token(login, scope)
     return Response(json.dumps({"token": token}), content_type="application/json")
-
 
 
 def get_current_request_token() -> Optional[str]:
@@ -317,6 +321,7 @@ def is_current_request_logged_in_as_admin() -> bool:
     if scope != "admin":
         return False
     return True
+
 
 def assert_current_request_logged_in() -> None:
     """Asserts that the current request is logged in."""

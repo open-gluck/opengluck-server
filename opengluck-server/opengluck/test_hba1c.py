@@ -1,7 +1,6 @@
 from typing import cast
 
-from opengluck.glucose import (GlucoseRecord, GlucoseRecordType,
-                               find_glucose_records)
+from opengluck.glucose import GlucoseRecord, GlucoseRecordType
 
 from .hba1c import _calculate_hba1c
 
