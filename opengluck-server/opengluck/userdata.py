@@ -40,6 +40,18 @@ def _set_userdata(key):
     return Response("", status=201)
 
 
+@app.route("/opengluck/userdata/<key>", methods=["DELETE"])
+def _delete_userdata(key):
+    """Delete a userdata."""
+    redis_client = assert_get_current_request_redis_client()
+
+    if key is None:
+        return Response("Missing key or value", status=400)
+
+    redis_client.delete(_get_redis_key(key))
+    return Response("", status=204)
+
+
 def set_userdata(key: str, value: Any) -> None:
     """Set a value in the userdata."""
     redis_client = assert_get_current_request_redis_client()

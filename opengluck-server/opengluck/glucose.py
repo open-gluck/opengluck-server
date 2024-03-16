@@ -17,6 +17,7 @@ from .login import (assert_current_request_logged_in,
                     assert_get_current_request_redis_client)
 from .redis import bump_revision
 from .server import app
+from .userdata import get_userdata, set_userdata
 from .utils import parse_timestamp
 from .webhooks import call_webhooks
 
@@ -24,7 +25,9 @@ from .webhooks import call_webhooks
 # historic records shifts and we no longer have matching scan records
 _key_last_used_scan = "last_used_scan"
 _merged_glucose_records_lock = Lock()
-_keep_scan_records_apart_duration = 4 * 60 + 50
+
+""" The minimum duration between two scan records to be kept."""
+keep_scan_records_apart_duration = 4 * 60 + 50
 
 
 class GlucoseRecordType(str, Enum):
@@ -182,7 +185,7 @@ def _get_merged_glucose_records_impl(
         for record in records_scan:
             cur_ts = datetime.fromisoformat(record["timestamp"]).timestamp()
             if (
-                cur_ts - base_ts >= _keep_scan_records_apart_duration
+                cur_ts - base_ts >= keep_scan_records_apart_duration
                 or cur_ts == last_used_scan_ts
             ):
                 records_scan_filtered.append(record)
@@ -301,6 +304,14 @@ def insert_glucose_records(
     )
 
 
+def get_last_just_updated_glucose_at() -> Optional[datetime]:
+    """Gets the last time just_updated_glucose was called."""
+    last_just_updated_glucose_at = get_userdata("last_just_updated_glucose_at")
+    if last_just_updated_glucose_at is not None:
+        return parse_timestamp(last_just_updated_glucose_at)
+    return None
+
+
 def just_updated_glucose(
     *, previous: Optional[GlucoseRecord], current_glucose_record: GlucoseRecord
 ) -> None:
@@ -309,6 +320,7 @@ def just_updated_glucose(
     This is used to run the glucose:changed webhook, providing both previous
     and current records.
     """
+    set_userdata("last_just_updated_glucose_at", current_glucose_record["timestamp"])
     call_webhooks(
         "glucose:changed",
         {
@@ -348,7 +360,7 @@ def _get_latest_glucose_data():
         for record in records
         if parse_timestamp(record["timestamp"]).timestamp() > min_timestamp
     ]
-    return Response(json.dumps(records))
+    return Response(json.dumps(records), content_type="application/json")
 
 
 def _get_record_type(record: dict) -> str:
