@@ -4,6 +4,8 @@ import time
 from typing import List
 
 from flask import Response, request
+from opengluck.instant_glucose import (InstantGlucoseRecord,
+                                       get_latest_instant_glucose_records)
 
 from .food import FoodRecord, get_latest_food_records
 from .glucose import (GlucoseRecord, GlucoseRecordType,
@@ -68,6 +70,17 @@ def _get_insulin_records(max_duration: int) -> List[InsulinRecord]:
     return records
 
 
+def _get_instant_glucose_records(max_duration: int) -> List[InstantGlucoseRecord]:
+    min_timestamp = time.time() - max_duration
+    records = get_latest_instant_glucose_records(last_n=5)
+    records = [
+        record
+        for record in records
+        if parse_timestamp(record["timestamp"]).timestamp() > min_timestamp
+    ]
+    return records
+
+
 @app.route("/opengluck/glucose/last")
 def _get_glucose_last_route():
     # TODO LEGACY this is a legacy route and should be removed
@@ -91,11 +104,13 @@ def get_last(
     low_records = _get_low_records(max_duration=max_duration)
     food_records = _get_food_records(max_duration=max_duration)
     insulin_records = _get_insulin_records(max_duration=max_duration)
+    instant_glucose_records = _get_instant_glucose_records(max_duration=max_duration)
     return {
         "glucose-records": glucose_records,
         "low-records": low_records,
         "insulin-records": insulin_records,
         "food-records": food_records,
+        "instant-glucose-records": instant_glucose_records,
     }
 
 
