@@ -9,6 +9,9 @@ from multiprocessing import Lock
 
 from flask import Response, abort, request
 
+from opengluck.instant_glucose import (get_current_instant_glucose_record,
+                                       just_updated_instant_glucose)
+
 from .episode import (get_current_episode_record, get_episode_for_mgdl,
                       get_episodes_after_date, insert_episode, insert_episodes,
                       just_updated_episode)
@@ -57,6 +60,7 @@ def _upload_data_data():
 
         # archive the current glucose/episode records
         previous_current_glucose_record = get_current_glucose_record()
+        previous_current_instant_glucose_record = get_current_instant_glucose_record()
         previous_current_episode_record = get_current_episode_record()
         logging.debug(
             "(upload) previous_current_episode_record: %s",
@@ -183,6 +187,18 @@ def _upload_data_data():
                         previous=previous_current_episode_record,
                         current_episode_record=new_current_episode_record,
                     )
+
+        current_instant_glucose_record = get_current_instant_glucose_record()
+        if current_instant_glucose_record is not None:
+            if (
+                previous_current_instant_glucose_record is None
+                or previous_current_instant_glucose_record["mgDl"]
+                != current_instant_glucose_record["mgDl"]
+            ):
+                just_updated_instant_glucose(
+                    previous=previous_current_instant_glucose_record,
+                    current_instant_glucose_record=current_instant_glucose_record,
+                )
 
         logging.debug("(upload) done")
         response["revision"] = get_revision(redis_client)

@@ -17,6 +17,15 @@ def test_insert_glucose_record():
     with app.test_client() as test_client:
         one_minute_ago = datetime.now() - timedelta(minutes=1)
         one_minute_ago_iso = one_minute_ago.astimezone(tz).isoformat()
+        response = test_client.delete(
+            "/opengluck/webhooks/instant-glucose:changed", headers=_headers
+        )
+        assert response.status_code == 204
+        response = test_client.get(
+            "/opengluck/webhooks/instant-glucose:changed/last", headers=_headers
+        )
+        assert response.status_code == 200
+        assert response.json == []
         response = test_client.post(
             "/opengluck/instant-glucose/upload",
             headers=_headers,
@@ -61,3 +70,18 @@ def test_insert_glucose_record():
                 "device_id": "test-device",
             }
         ]
+        response = test_client.get(
+            "/opengluck/webhooks/instant-glucose:changed/last", headers=_headers
+        )
+        assert response.status_code == 200
+        assert response.json
+        assert response.json[0]["data"] == {
+            "cgm-properties": {"has-real-time": True},
+            "new": {
+                "device_id": "test-device",
+                "mgDl": 123,
+                "model_name": "test-model",
+                "timestamp": one_minute_ago_iso,
+            },
+            "previous": None,
+        }
