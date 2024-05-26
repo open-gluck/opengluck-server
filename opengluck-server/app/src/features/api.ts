@@ -270,6 +270,7 @@ type FoodRecord = {
 
 type LastData = {
   glucose_records: GlucoseRecord[];
+  instant_glucose_records: InstantGlucoseRecord[];
   low_records: LowRecord[];
   insulin_records: InsulinRecord[];
   food_records: FoodRecord[];
@@ -291,6 +292,7 @@ export function useLastRecords() {
     return {
       revision: j["revision"],
       glucose_records: j["glucose-records"] ?? [],
+      instant_glucose_records: j["instant-glucose-records"] ?? [],
       low_records: j["low-records"] ?? [],
       insulin_records: j["insulin-records"] ?? [],
       food_records: j["food-records"] ?? [],

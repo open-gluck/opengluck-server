@@ -46,6 +46,30 @@ export default function LastRecords() {
         </tbody>
       </table>
 
+      <h2>Instant Glucose Records</h2>
+      <table>
+        <thead>
+          <tr>
+            <th>Timestamp</th>
+            <th>mg/dL</th>
+            <th>Model Name</th>
+            <th>Device ID</th>
+          </tr>
+        </thead>
+        <tbody>
+          {data.instant_glucose_records.map((record) => (
+            <tr
+              key={record.timestamp}
+            >
+              <td>{record.timestamp}</td>
+              <td>{record.mgDl}</td>
+              <td>{record.model_name}</td>
+              <td>{record.device_id}</td>
+            </tr>
+          ))}
+        </tbody>
+      </table>
+
       <h2>Glucose Records</h2>
       <table>
         <thead>
