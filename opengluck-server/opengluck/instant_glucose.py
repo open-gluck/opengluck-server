@@ -2,17 +2,20 @@
 import json
 import logging
 from datetime import datetime
-from typing import List, TypedDict
+from typing import List, Optional, TypedDict
 
 from flask import Response, abort, request
 from redis import WatchError
 
+from .cgm import get_current_cgm_properties
 from .config import tz
 from .login import (assert_current_request_logged_in,
                     assert_get_current_request_redis_client)
 from .redis import bump_revision
 from .server import app
+from .userdata import get_userdata, set_userdata
 from .utils import parse_timestamp
+from .webhooks import call_webhooks
 
 _key = "instant_glucose"
 
@@ -85,6 +88,38 @@ def _member_to_instant_glucose_record(member: bytes) -> InstantGlucoseRecord:
         mgDl=record["mgDl"],
         model_name=record["model_name"],
         device_id=record["device_id"],
+    )
+
+
+def get_current_instant_glucose_record() -> Optional[InstantGlucoseRecord]:
+    """Gets the current glucose record."""
+    records = get_latest_instant_glucose_records(last_n=1)
+    if len(records) == 0:
+        return None
+    return records[0]
+
+
+def just_updated_instant_glucose(
+    *,
+    previous: Optional[InstantGlucoseRecord],
+    current_instant_glucose_record: InstantGlucoseRecord,
+) -> None:
+    """Notifies that instant glucose records have been updated.
+
+    This is used to run the instant_glucose:changed webhook, providing both previous
+    and current records.
+    """
+    set_userdata(
+        "last_just_updated_instant_glucose_at",
+        current_instant_glucose_record["timestamp"],
+    )
+    call_webhooks(
+        "instant-glucose:changed",
+        {
+            "previous": previous,
+            "new": current_instant_glucose_record,
+            "cgm-properties": get_current_cgm_properties(),
+        },
     )
 
 
@@ -172,8 +207,20 @@ def _upload_instant_glucose_data():
     body = request.get_json()
     if not body:
         abort(400)
+    previous_current_instant_glucose_record = get_current_instant_glucose_record()
     records = body.get("instant-glucose-records", [])
     status = insert_instant_glucose_records(records)
+    current_instant_glucose_record = get_current_instant_glucose_record()
+    assert current_instant_glucose_record is not None
+    if (
+        previous_current_instant_glucose_record is None
+        or previous_current_instant_glucose_record["mgDl"]
+        != current_instant_glucose_record["mgDl"]
+    ):
+        just_updated_instant_glucose(
+            previous=previous_current_instant_glucose_record,
+            current_instant_glucose_record=current_instant_glucose_record,
+        )
     return Response(
         json.dumps({"success": True, "status": status["status"]}),
         content_type="application/json",
