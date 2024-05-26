@@ -1,4 +1,3 @@
-import logging
 from datetime import datetime, timedelta
 
 from .config import tz

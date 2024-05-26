@@ -8,6 +8,7 @@ from datetime import datetime
 from multiprocessing import Lock
 
 from flask import Response, abort, request
+
 from opengluck.instant_glucose import (get_current_instant_glucose_record,
                                        just_updated_instant_glucose)
 

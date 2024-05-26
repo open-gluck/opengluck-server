@@ -13,7 +13,7 @@ from .login import (assert_current_request_logged_in,
                     assert_get_current_request_redis_client)
 from .redis import bump_revision
 from .server import app
-from .userdata import get_userdata, set_userdata
+from .userdata import set_userdata
 from .utils import parse_timestamp
 from .webhooks import call_webhooks
 
