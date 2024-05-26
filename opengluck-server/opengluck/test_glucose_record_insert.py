@@ -31,6 +31,7 @@ def test_get_episode():
             "current_episode": None,
             "current_episode_timestamp": None,
             "has_cgm_real_time_data": True,
+            "current_instant_glucose_record": None,
         }
 
 
@@ -104,6 +105,12 @@ def test_insert_glucose_record_1():
             "current_episode": "normal",
             "current_episode_timestamp": "2023-04-22T14:00:00+02:00",
             "has_cgm_real_time_data": True,
+            "current_instant_glucose_record": {
+                "device_id": "00000000-0000-0000-0000-000000000000",
+                "mgDl": 123,
+                "model_name": "Unknown",
+                "timestamp": "2023-04-22T14:00:00+02:00",
+            },
         }
 
         response = test_client.get("/opengluck/episode", headers=_headers)
@@ -170,6 +177,12 @@ def test_insert_glucose_record_2():
             "current_episode": "normal",
             "current_episode_timestamp": "2023-04-22T16:00:00+02:00",
             "has_cgm_real_time_data": True,
+            "current_instant_glucose_record": {
+                "device_id": "00000000-0000-0000-0000-000000000000",
+                "mgDl": 210,
+                "model_name": "Unknown",
+                "timestamp": "2023-04-22T15:00:00+02:00",
+            },
         }
 
         response = test_client.get("/opengluck/episode", headers=_headers)
