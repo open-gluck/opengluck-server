@@ -2,6 +2,7 @@ import json
 import logging
 
 from flask import Response, request
+from opengluck.instant_glucose import get_latest_instant_glucose_records
 
 from .cgm import do_we_have_realtime_cgm_data
 from .episode import get_current_episode_record
@@ -46,6 +47,7 @@ def _handle_get_current(
     records = get_merged_glucose_records()
     records = records[:2]
     historic_records = get_latest_glucose_records(GlucoseRecordType.historic, last_n=2)
+    instant_glucose_records = get_latest_instant_glucose_records(last_n=1)
 
     if len(records) > 0:
         last_historic = historic_records[0] if len(historic_records) > 0 else None
@@ -68,6 +70,11 @@ def _handle_get_current(
                     else None,
                     "has_cgm_real_time_data": has_cgm_real_time_data,
                     "revision": revision,
+                    "current_instant_glucose_record": instant_glucose_records[0]
+                    if instant_glucose_records
+                    and parse_timestamp(instant_glucose_records[0]["timestamp"])
+                    >= parse_timestamp(records[0]["timestamp"])
+                    else None,
                 }
             ),
             headers={"content-type": "application/json", "etag": revision},
@@ -82,6 +89,9 @@ def _handle_get_current(
                     "current_episode_timestamp": None,
                     "has_cgm_real_time_data": has_cgm_real_time_data,
                     "revision": revision,
+                    "current_instant_glucose_record": instant_glucose_records[0]
+                    if instant_glucose_records
+                    else None,
                 }
             ),
             headers={"content-type": "application/json"},
