@@ -133,6 +133,10 @@ When a user data has been set.
 
 When a blood glucose measurement has changed.
 
+### `instant-glucose:changed`
+
+When an instant blood glucose measurement has changed.
+
 ### `episode:changed`
 
 When the current episode has changed.
