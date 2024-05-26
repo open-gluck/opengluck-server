@@ -2,6 +2,7 @@ import json
 import logging
 
 from flask import Response, request
+
 from opengluck.instant_glucose import get_latest_instant_glucose_records
 
 from .cgm import do_we_have_realtime_cgm_data
