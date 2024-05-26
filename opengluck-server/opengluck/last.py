@@ -4,6 +4,7 @@ import time
 from typing import List
 
 from flask import Response, request
+
 from opengluck.instant_glucose import (InstantGlucoseRecord,
                                        get_latest_instant_glucose_records)
 
