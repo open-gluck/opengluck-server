@@ -609,6 +609,8 @@ export function useUploadData() {
 
 type HbA1cData = {
   hba1c?: number;
+  avg_mgdl?: number;
+  cv?: number;
 };
 
 export function useHbA1c(from: Date, to: Date) {

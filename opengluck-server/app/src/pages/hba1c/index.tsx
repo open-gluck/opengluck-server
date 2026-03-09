@@ -9,6 +9,20 @@ function formatHbA1c(hba1c: number | undefined | null): string {
   return `${hba1c.toFixed(1)} %`;
 }
 
+function formatAvgMgdl(avg: number | undefined | null): string {
+  if (avg === undefined || avg === null) {
+    return "";
+  }
+  return `${Math.round(avg)}`;
+}
+
+function formatCv(cv: number | undefined | null): string {
+  if (cv === undefined || cv === null) {
+    return "";
+  }
+  return `${cv.toFixed(1)} %`;
+}
+
 export default function HbA1c() {
   const now: Date = useMemo(() => new Date(), []);
   const todayAtMidnight = useMemo<Date>(() => {
@@ -93,33 +107,47 @@ export default function HbA1c() {
         <thead>
           <tr>
             <th></th>
-            <th>Value</th>
+            <th>HbA1c</th>
+            <th>Avg mg/dL</th>
+            <th>%CV</th>
           </tr>
         </thead>
         <tbody>
           <tr>
             <td>Today</td>
             <td className="hba1c">{formatHbA1c(dataToday.hba1c)}</td>
+            <td>{formatAvgMgdl(dataToday.avg_mgdl)}</td>
+            <td>{formatCv(dataToday.cv)}</td>
           </tr>
           <tr>
             <td>Last 24 Hours</td>
             <td className="hba1c">{formatHbA1c(dataLast24Hours.hba1c)}</td>
+            <td>{formatAvgMgdl(dataLast24Hours.avg_mgdl)}</td>
+            <td>{formatCv(dataLast24Hours.cv)}</td>
           </tr>
           <tr>
             <td>Yesterday</td>
             <td className="hba1c">{formatHbA1c(dataYesterday.hba1c)}</td>
+            <td>{formatAvgMgdl(dataYesterday.avg_mgdl)}</td>
+            <td>{formatCv(dataYesterday.cv)}</td>
           </tr>
           <tr>
             <td>Last Week</td>
             <td className="hba1c">{formatHbA1c(dataLastWeek.hba1c)}</td>
+            <td>{formatAvgMgdl(dataLastWeek.avg_mgdl)}</td>
+            <td>{formatCv(dataLastWeek.cv)}</td>
           </tr>
           <tr>
             <td>Last 30 Days</td>
             <td className="hba1c">{formatHbA1c(dataLast30Days.hba1c)}</td>
+            <td>{formatAvgMgdl(dataLast30Days.avg_mgdl)}</td>
+            <td>{formatCv(dataLast30Days.cv)}</td>
           </tr>
           <tr>
             <td>Last 90 Days</td>
             <td className="hba1c">{formatHbA1c(dataLast90Days.hba1c)}</td>
+            <td>{formatAvgMgdl(dataLast90Days.avg_mgdl)}</td>
+            <td>{formatCv(dataLast90Days.cv)}</td>
           </tr>
         </tbody>
       </table>
