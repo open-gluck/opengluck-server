@@ -1,5 +1,3 @@
-from typing import cast
-
 from opengluck.glucose import GlucoseRecord, GlucoseRecordType
 
 from .hba1c import _calculate_hba1c
@@ -8,6 +6,7 @@ from .hba1c import _calculate_hba1c
 def test_calculate_hba1c():
     assert _calculate_hba1c([]) is None
 
+    # Single record: avg=100, cv=0
     glucose_records = [
         GlucoseRecord(
             timestamp="2021-01-01T00:00:00",
@@ -15,11 +14,13 @@ def test_calculate_hba1c():
             record_type=GlucoseRecordType.historic,
         ),
     ]
-    assert (
-        abs(cast(float, _calculate_hba1c(glucose_records)) - 5.111498257839721)
-        < 0.00001
-    )
+    result = _calculate_hba1c(glucose_records)
+    assert result is not None
+    assert abs(result["hba1c"] - 5.111498257839721) < 0.00001
+    assert abs(result["avg_mgdl"] - 100) < 0.00001
+    assert result["cv"] == 0
 
+    # Two records 20 min apart, avg=100 (90→110 interpolated)
     glucose_records = [
         GlucoseRecord(
             timestamp="2021-01-01T00:00:00",
@@ -32,10 +33,11 @@ def test_calculate_hba1c():
             record_type=GlucoseRecordType.historic,
         ),
     ]
-    assert (
-        abs(cast(float, _calculate_hba1c(glucose_records)) - 5.111498257839721)
-        < 0.00001
-    )
+    result = _calculate_hba1c(glucose_records)
+    assert result is not None
+    assert abs(result["hba1c"] - 5.111498257839721) < 0.00001
+    assert abs(result["avg_mgdl"] - 100) < 0.5
+    assert result["cv"] > 0
 
     glucose_records = [
         GlucoseRecord(
@@ -49,7 +51,9 @@ def test_calculate_hba1c():
             record_type=GlucoseRecordType.historic,
         ),
     ]
-    assert cast(float, _calculate_hba1c(glucose_records)) > 5.111498257839721
+    result = _calculate_hba1c(glucose_records)
+    assert result is not None
+    assert result["hba1c"] > 5.111498257839721
 
     glucose_records = [
         GlucoseRecord(
@@ -63,7 +67,9 @@ def test_calculate_hba1c():
             record_type=GlucoseRecordType.historic,
         ),
     ]
-    assert cast(float, _calculate_hba1c(glucose_records)) < 5.111498257839721
+    result = _calculate_hba1c(glucose_records)
+    assert result is not None
+    assert result["hba1c"] < 5.111498257839721
 
     glucose_records = [
         GlucoseRecord(
@@ -77,11 +83,11 @@ def test_calculate_hba1c():
             record_type=GlucoseRecordType.historic,
         ),
     ]
-    assert (
-        abs(cast(float, _calculate_hba1c(glucose_records)) - 4.850174216027875)
-        < 0.00001
-    )
+    result = _calculate_hba1c(glucose_records)
+    assert result is not None
+    assert abs(result["hba1c"] - 4.850174216027875) < 0.00001
 
+    # Records with a >60 min gap
     glucose_records = [
         GlucoseRecord(
             timestamp="2021-01-01T00:00:00",
@@ -99,7 +105,7 @@ def test_calculate_hba1c():
             record_type=GlucoseRecordType.historic,
         ),
     ]
-    assert (
-        abs(cast(float, _calculate_hba1c(glucose_records)) - 5.743031358885017)
-        < 0.00001
-    )
+    result = _calculate_hba1c(glucose_records)
+    assert result is not None
+    assert abs(result["hba1c"] - 5.743031358885017) < 0.00001
+    assert result["cv"] > 0

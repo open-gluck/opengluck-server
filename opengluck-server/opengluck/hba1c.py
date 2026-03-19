@@ -1,5 +1,6 @@
 """A class to retrieve HbA1c values."""
 import json
+import math
 from datetime import timedelta
 from typing import List, Optional, TypedDict
 
@@ -14,16 +15,26 @@ from .utils import parse_timestamp
 _smoothe_glucose_for_at_most_seconds = 60 * 60
 
 
+class HbA1cStats(TypedDict):
+    """The calculated HbA1c statistics."""
+
+    hba1c: float
+    avg_mgdl: float
+    cv: float
+
+
 class HbA1cResult(TypedDict):
     """The HbA1c result."""
 
     from_date: str
     to_date: str
     hba1c: Optional[float]
+    avg_mgdl: Optional[float]
+    cv: Optional[float]
 
 
-def _calculate_hba1c(glucose_records: List[GlucoseRecord]) -> Optional[float]:
-    """Calculate the HbA1c value."""
+def _calculate_hba1c(glucose_records: List[GlucoseRecord]) -> Optional[HbA1cStats]:
+    """Calculate the HbA1c value, average mg/dL, and coefficient of variation."""
     if len(glucose_records) == 0:
         return None
     # sort the records by timestamp
@@ -48,9 +59,11 @@ def _calculate_hba1c(glucose_records: List[GlucoseRecord]) -> Optional[float]:
             i += 1
 
         last_record = record
-    print(values)
     avg_mgdl = sum(values) / len(values)
-    return (avg_mgdl + 46.7) / 28.7
+    hba1c = (avg_mgdl + 46.7) / 28.7
+    std_dev = math.sqrt(sum((v - avg_mgdl) ** 2 for v in values) / len(values))
+    cv = (std_dev / avg_mgdl) * 100 if avg_mgdl != 0 else 0
+    return HbA1cStats(hba1c=hba1c, avg_mgdl=avg_mgdl, cv=cv)
 
 
 @app.route("/opengluck/hba1c", methods=["POST"])
@@ -63,12 +76,16 @@ def _record_hba1c():
     to_ts = parse_timestamp(to_date)
 
     glucose_records = find_glucose_records(GlucoseRecordType.historic, from_ts, to_ts)
-    hbA1c = _calculate_hba1c(glucose_records)
+    stats = _calculate_hba1c(glucose_records)
 
     return Response(
         json.dumps(
             HbA1cResult(
-                from_date=from_ts.isoformat(), to_date=to_ts.isoformat(), hba1c=hbA1c
+                from_date=from_ts.isoformat(),
+                to_date=to_ts.isoformat(),
+                hba1c=stats["hba1c"] if stats else None,
+                avg_mgdl=stats["avg_mgdl"] if stats else None,
+                cv=stats["cv"] if stats else None,
             )
         ),
         status=200,
