@@ -46,8 +46,11 @@ def _calculate_hba1c(glucose_records: List[GlucoseRecord]) -> Optional[HbA1cStat
         record_ts = parse_timestamp(record["timestamp"])
         elapsed = record_ts - parse_timestamp(last_record["timestamp"])
         delta_seconds = elapsed.total_seconds()
+        if delta_seconds <= 0:
+            last_record = record
+            continue
         if delta_seconds > _smoothe_glucose_for_at_most_seconds:
-            values.append(record["mgDl"])
+            last_record = record
             continue
         delta_mgDl = record["mgDl"] - last_record["mgDl"]
         current_ts = parse_timestamp(last_record["timestamp"]) + timedelta(minutes=1)
@@ -60,7 +63,7 @@ def _calculate_hba1c(glucose_records: List[GlucoseRecord]) -> Optional[HbA1cStat
 
         last_record = record
     avg_mgdl = sum(values) / len(values)
-    hba1c = (avg_mgdl + 46.7) / 28.7
+    hba1c = 3.31 + 0.02392 * avg_mgdl
     std_dev = math.sqrt(sum((v - avg_mgdl) ** 2 for v in values) / len(values))
     cv = (std_dev / avg_mgdl) * 100 if avg_mgdl != 0 else 0
     return HbA1cStats(hba1c=hba1c, avg_mgdl=avg_mgdl, cv=cv)

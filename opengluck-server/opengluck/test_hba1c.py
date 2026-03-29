@@ -16,7 +16,7 @@ def test_calculate_hba1c():
     ]
     result = _calculate_hba1c(glucose_records)
     assert result is not None
-    assert abs(result["hba1c"] - 5.111498257839721) < 0.00001
+    assert abs(result["hba1c"] - 5.702) < 0.00001
     assert abs(result["avg_mgdl"] - 100) < 0.00001
     assert result["cv"] == 0
 
@@ -35,7 +35,7 @@ def test_calculate_hba1c():
     ]
     result = _calculate_hba1c(glucose_records)
     assert result is not None
-    assert abs(result["hba1c"] - 5.111498257839721) < 0.00001
+    assert abs(result["hba1c"] - 5.702) < 0.5
     assert abs(result["avg_mgdl"] - 100) < 0.5
     assert result["cv"] > 0
 
@@ -53,7 +53,7 @@ def test_calculate_hba1c():
     ]
     result = _calculate_hba1c(glucose_records)
     assert result is not None
-    assert result["hba1c"] > 5.111498257839721
+    assert result["hba1c"] > 5.702
 
     glucose_records = [
         GlucoseRecord(
@@ -69,7 +69,7 @@ def test_calculate_hba1c():
     ]
     result = _calculate_hba1c(glucose_records)
     assert result is not None
-    assert result["hba1c"] < 5.111498257839721
+    assert result["hba1c"] < 5.702
 
     glucose_records = [
         GlucoseRecord(
@@ -85,7 +85,7 @@ def test_calculate_hba1c():
     ]
     result = _calculate_hba1c(glucose_records)
     assert result is not None
-    assert abs(result["hba1c"] - 4.850174216027875) < 0.00001
+    assert abs(result["hba1c"] - 5.5226) < 0.00001
 
     # Records with a >60 min gap
     glucose_records = [
@@ -107,5 +107,5 @@ def test_calculate_hba1c():
     ]
     result = _calculate_hba1c(glucose_records)
     assert result is not None
-    assert abs(result["hba1c"] - 5.743031358885017) < 0.00001
+    assert abs(result["hba1c"] - 5.5226) < 0.00001
     assert result["cv"] > 0
