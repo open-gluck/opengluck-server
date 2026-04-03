@@ -65,7 +65,7 @@ def record_insulin(*, id: str, timestamp: datetime, units: int, deleted: bool) -
     if should_bump_revision:
         bump_revision(redis_client)
         call_webhooks(
-            "insulin:new",
+            "insulin:changed",
             {
                 "id": id,
                 "timestamp": timestamp.isoformat(),

@@ -114,7 +114,7 @@ def record_food(
     if should_bump_revision:
         bump_revision(redis_client)
         call_webhooks(
-            "food:new",
+            "food:changed",
             {
                 "id": id,
                 "timestamp": timestamp.isoformat(),
