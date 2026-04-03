@@ -80,6 +80,16 @@ def record_instant_glucose_data(
             logging.debug("WatchError, will retry")
             pass
 
+    call_webhooks(
+        "instant-glucose:new",
+        {
+            "timestamp": timestamp.isoformat(),
+            "mgDl": mgDl,
+            "model_name": model_name,
+            "device_id": device_id,
+        },
+    )
+
 
 def _member_to_instant_glucose_record(member: bytes) -> InstantGlucoseRecord:
     record = json.loads(member.decode("utf-8"))

@@ -42,6 +42,12 @@ export const webhookTypes: WebhookType[] = [
       "This is called when new instant glucose records are received. This webhook received both the previous and new current records.",
   },
   {
+    id: "instant-glucose:new",
+    name: "New Instant Glucose Measurement",
+    description:
+      "This is called every time a new instant glucose measurement is received. Includes the last low record as context.",
+  },
+  {
     id: "episode:changed",
     name: "Glucose Episode Changed",
     description:
