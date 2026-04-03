@@ -8,6 +8,9 @@ build:
 	#docker-compose build --no-cache opengluck-server
 	docker-compose build  opengluck-server
 
+publish: build
+	docker push opengluck/opengluck-server
+
 build-dev-tools:
 	#docker-compose build --no-cache dev-tools dev
 	docker-compose build dev-tools dev

@@ -69,7 +69,7 @@ def record_low(
     if should_bump_revision:
         bump_revision(redis_client)
         call_webhooks(
-            "low:new",
+            "low:changed",
             {
                 "id": id,
                 "timestamp": timestamp.isoformat(),

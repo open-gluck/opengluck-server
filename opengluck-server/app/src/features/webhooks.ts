@@ -42,6 +42,12 @@ export const webhookTypes: WebhookType[] = [
       "This is called when new instant glucose records are received. This webhook received both the previous and new current records.",
   },
   {
+    id: "instant-glucose:new",
+    name: "New Instant Glucose Measurement",
+    description:
+      "This is called every time a new instant glucose measurement is received. Includes the last low record as context.",
+  },
+  {
     id: "episode:changed",
     name: "Glucose Episode Changed",
     description:
@@ -60,18 +66,21 @@ export const webhookTypes: WebhookType[] = [
       "This is called when a new scan glucose measurement is received.",
   },
   {
-    id: "low:new",
-    name: "New Low",
-    description: "This is called when a new low is received.",
+    id: "low:changed",
+    name: "Low Changed",
+    description:
+      "This is called when a low record is added, updated, or deleted.",
   },
   {
-    id: "insulin:new",
-    name: "New Insulin",
-    description: "This is called when a new insulin units is received.",
+    id: "insulin:changed",
+    name: "Insulin Changed",
+    description:
+      "This is called when an insulin record is added, updated, or deleted.",
   },
   {
-    id: "food:new",
-    name: "New Food",
-    description: "This is called when a new food record is received.",
+    id: "food:changed",
+    name: "Food Changed",
+    description:
+      "This is called when a food record is added, updated, or deleted.",
   },
 ];
